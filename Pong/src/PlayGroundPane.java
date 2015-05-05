@@ -2,21 +2,32 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 
+
+/**
+ * 
+ * @author 	Ariel Levin
+ * 			<br/><a href="http://about.me/ariel.levin">about.me/ariel.levin</a>
+ * 			<br/><a href="mailto:ariel.lvn89@gmail.com">ariel.lvn89@gmail.com</a><br/><br/>
+ *
+ * */
 public class PlayGroundPane extends Pane {
 
-	private final int BALL_SIZE = 10;
+	private final int BALL_RADIUS = 5;
 	private final int PLAYER_LENGTH = 40;
 	private final int PLAYER_HEIGHT = 10;
 	private final int COMP_LENGTH = 40;
@@ -30,25 +41,28 @@ public class PlayGroundPane extends Pane {
 	private final int BALL_DEFAULT_JUMPS = 2;
 	
 	private Color ballColor = BALL_DEFAULT_COLOR;
-	private double ballX, ballY, playerX, compX;
 	private int ball_jumps = BALL_DEFAULT_JUMPS, player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
 	private int comp_jumps = COMP_DEFAULT_JUMPS, compScore = 0, playerScore = 0;
 	private boolean x_right = true, y_down = false, isNewRound = true;
 	private boolean isPlayerScore = false, isCompScore = false, gameON = false, waitForAction = true;
 	private Timeline timeline;
-	
-	private Pane topPane;
-	
-	
+	private Pane buttonPane, scorePane;
+	private Label lblPlayer, lblComp;
+	private Rectangle player, comp;
+	private Circle ball;
+	//private Program program;
 	
 
-	public PlayGroundPane(Pane topPane) {
-		this.topPane = topPane;
+	public PlayGroundPane(Pane buttonPane, Pane scorePane, Program program) {
+		this.buttonPane = buttonPane;
+		this.scorePane = scorePane;
+		//this.program = program;
 		
 		timeline = new Timeline(new KeyFrame(Duration.millis(DELAY), ae -> timeLineAction()));
 		timeline.setCycleCount(Animation.INDEFINITE);
 		
-		createTopPanel();
+		createButtonPane();
+		createScorePane();
 		
 		setOnKeyPressed(new EventHandler<KeyEvent>() {
 			public void handle(KeyEvent ke) {
@@ -66,10 +80,10 @@ public class PlayGroundPane extends Pane {
 			@Override
 			public void handle(MouseEvent me) {
 				if (waitForAction) {
-					playerX = me.getX() - PLAYER_LENGTH/2 ;
-					ballX = playerX + PLAYER_LENGTH/2 - BALL_SIZE/2;
+					player.setX(me.getX() - PLAYER_LENGTH/2);
+					ball.setCenterX(player.getX() + PLAYER_LENGTH/2 - BALL_RADIUS/2);
 				} else if (gameON)
-					playerX = me.getX() - PLAYER_LENGTH/2 ;
+					player.setX(me.getX() - PLAYER_LENGTH/2);
 			}
 		});
 		
@@ -87,15 +101,12 @@ public class PlayGroundPane extends Pane {
 			}
 		});
 		
-		placeComponents();
 	}
 
-	private void createTopPanel() {
-		//topPanel.setPreferredSize(new Dimension(500,40));
-		//topPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
+	private void createButtonPane() {
 
 		Button start = new Button("Start");
-		topPane.getChildren().add(start);
+		buttonPane.getChildren().add(start);
 		start.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -103,15 +114,9 @@ public class PlayGroundPane extends Pane {
 				start();
 			}
 		});
-//		start.addActionListener(new ActionListener() {
-//			public void actionPerformed(ActionEvent arg0) {
-//				start();
-//			}
-//		});
-		//start.setMnemonic('S');
 
 		Button pause = new Button("Pause");
-		topPane.getChildren().add(pause);
+		buttonPane.getChildren().add(pause);
 		pause.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -119,10 +124,9 @@ public class PlayGroundPane extends Pane {
 				pause();
 			}
 		});
-		//pause.setMnemonic('P');
 
 		Button stop = new Button("Stop");
-		topPane.getChildren().add(stop);
+		buttonPane.getChildren().add(stop);
 		stop.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -130,71 +134,71 @@ public class PlayGroundPane extends Pane {
 				stop();
 			}
 		});
-		//stop.setMnemonic('O');
 
 	}
 	
-	private void timeLineAction() {
-		ballMovement();
-		computerMovement();
-		//repaint();
+	private void createScorePane() {
+		lblPlayer = new Label("Player: " + playerScore);
+		GridPane.setConstraints(lblPlayer, 1, 1);
+		scorePane.getChildren().add(lblPlayer);
+		lblComp = new Label("Computer: " + compScore);
+		GridPane.setConstraints(lblComp, 2, 1);
+		scorePane.getChildren().add(lblComp);
 	}
 	
-	private void placeComponents() {
+	private void timeLineAction() {
 		if (isNewRound) {
 			newRound();
 			isNewRound = false;
 		}
-
-		g.setFont(new Font("Arial",Font.BOLD,12));
-		g.setColor(Color.rgb(65,21,126));
-		g.drawString("Player:",10,60);
-		g.setColor(Color.rgb(50,120,60));
-		g.drawString("Computer:",getWidth()-66,60);
-		g.setColor(Color.rgb(209,26,220));
-		g.setFont(new Font("Arial",Font.BOLD,15));
-		g.drawString(String.format("%03d",playerScore),16,80);
-		g.drawString(String.format("%03d",compScore),getWidth()-48,80);
-
-		g.setColor(Color.rgb(50,120,60));
-		g.fillRect(compX, 0, COMP_LENGTH, COMP_HEIGHT);
-
-		g.setColor(Color.rgb(65,21,126));
-		g.fillRect(playerX, getHeight()-PLAYER_HEIGHT, PLAYER_LENGTH, PLAYER_HEIGHT);
-
-		g.setColor(ballColor);
-		g.fillOval(ballX, ballY, BALL_SIZE, BALL_SIZE);
+		ballMovement();
+		computerMovement();
+		requestFocus();
 	}
+	
+	public void placeComponents() {
 
-//	protected void paintComponent(Graphics g) {
-//		super.paintComponent(g);
-//		requestFocusInWindow();
-//
-//		if (isNewRound) {
-//			newRound();
-//			isNewRound = false;
-//		}
-//
-//		g.setFont(new Font("Arial",Font.BOLD,12));
-//		g.setColor(Color.rgb(65,21,126));
-//		g.drawString("Player:",10,60);
-//		g.setColor(Color.rgb(50,120,60));
-//		g.drawString("Computer:",getWidth()-66,60);
-//		g.setColor(Color.rgb(209,26,220));
-//		g.setFont(new Font("Arial",Font.BOLD,15));
-//		g.drawString(String.format("%03d",playerScore),16,80);
-//		g.drawString(String.format("%03d",compScore),getWidth()-48,80);
-//
-//		g.setColor(Color.rgb(50,120,60));
-//		g.fillRect(compX, 0, COMP_LENGTH, COMP_HEIGHT);
-//
-//		g.setColor(Color.rgb(65,21,126));
-//		g.fillRect(playerX, getHeight()-PLAYER_HEIGHT, PLAYER_LENGTH, PLAYER_HEIGHT);
-//
-//		g.setColor(ballColor);
-//		g.fillOval(ballX, ballY, BALL_SIZE, BALL_SIZE);
-//
-//	}
+		comp = new Rectangle();
+		comp.setY(0);
+		comp.setWidth(COMP_LENGTH);
+		comp.setHeight(COMP_HEIGHT);
+		comp.setFill(Color.rgb(50,120,60));
+
+		player = new Rectangle();
+		player.yProperty().bind(heightProperty().subtract(PLAYER_HEIGHT));
+		player.setWidth(PLAYER_LENGTH);
+		player.setHeight(PLAYER_HEIGHT);
+		player.setFill(Color.rgb(65,21,126));
+
+		ball = new Circle();
+		ball.setRadius(BALL_RADIUS);
+		ball.setFill(ballColor);
+		
+		getChildren().addAll(comp, player, ball);
+		
+		if (isNewRound) {
+			newRound();
+			isNewRound = false;
+		}
+	}
+	
+	private void newRound() {
+		checkScore();			
+		ball.setCenterX(widthProperty().doubleValue()/2 - BALL_RADIUS/2);
+		ball.setCenterY(heightProperty().doubleValue() - PLAYER_HEIGHT - BALL_RADIUS);
+		player.setX(widthProperty().doubleValue()/2 - PLAYER_LENGTH/2);
+		comp.setX(widthProperty().doubleValue()/2 - COMP_LENGTH/2);
+		y_down = false;
+		x_right = (int)(Math.random()*2) == 1 ? true : false ;
+		timeline.stop();
+		gameON = false;
+		waitForAction = true;
+	}
+	
+	private void refreshScore() {
+		lblPlayer.setText("Player: " + playerScore);
+		lblComp.setText("Computer: " + compScore);
+	}
 
 	private void playerKeyboardMovement(int dir) {
 		if (waitForAction) {
@@ -203,85 +207,87 @@ public class PlayGroundPane extends Pane {
 			waitForAction = false;
 		}
 		if (gameON) {
-			if (dir==1 && (playerX+(PLAYER_LENGTH/2) < getWidth()))
-				playerX += player_keyboard_jumps;
-			if (dir==(-1) && (playerX-player_keyboard_jumps+(PLAYER_LENGTH/2)+5 > 0))
-				playerX -= player_keyboard_jumps;
+			if (dir==1 && (player.getX()+(PLAYER_LENGTH/2) < getWidth()))
+				player.setX(player.getX() + player_keyboard_jumps);
+			if (dir==(-1) && (player.getX()-player_keyboard_jumps+(PLAYER_LENGTH/2)+5 > 0))
+				player.setX(player.getX() - player_keyboard_jumps);
 		}
 	}
 
 	private void computerMovement() {
-		if (x_right && (compX+(COMP_LENGTH/2) < getWidth()))
-			compX += comp_jumps;
-		else if (compX-comp_jumps+(COMP_LENGTH/2)+5 > 0)
-			compX -= comp_jumps;
+		if (x_right && (comp.getX()+(COMP_LENGTH/2) < getWidth()))
+			comp.setX(comp.getX() + comp_jumps);
+		else if (comp.getX()-comp_jumps+(COMP_LENGTH/2)+5 > 0)
+			comp.setX(comp.getX() - comp_jumps);;
 	}
 
 	private void ballMovement() {
 		/* determine X position according to it's current place */
 		if (isPlayerScore) {
-			if (ballY+BALL_SIZE > 0) {
-				ballY -= ball_jumps;
+			if (ball.getCenterY() + BALL_RADIUS > 0) {
+				ball.setCenterY(ball.getCenterY() - ball_jumps);
 				if (x_right)
-					ballX += ball_jumps;
+					ball.setCenterX(ball.getCenterX() + ball_jumps);
 				else
-					ballX -= ball_jumps;
-			} else {
+					ball.setCenterX(ball.getCenterX() - ball_jumps);
+			} else {						// player score
 				playerScore++;
 				isNewRound = true;
 				isPlayerScore = false;
+				refreshScore();
 			}
 		} else if (isCompScore) {
-			if (ballY < getHeight()) {
-				ballY += ball_jumps;
+			if (ball.getCenterY() < getHeight()) {
+				ball.setCenterY(ball.getCenterY() + ball_jumps);
 				if (x_right)
-					ballX += ball_jumps;
+					ball.setCenterX(ball.getCenterX() + ball_jumps);
 				else
-					ballX -= ball_jumps;
-			} else {
+					ball.setCenterX(ball.getCenterX() - ball_jumps);
+			} else {						// comp score
 				compScore++;
 				isNewRound = true;
 				isCompScore = false;
+				refreshScore();
 			}
 		} else {
 
 			if (x_right) {
-				if (getWidth() > ballX + BALL_SIZE + ball_jumps)
-					ballX += ball_jumps;
+				if (getWidth() > ball.getCenterX() + BALL_RADIUS + ball_jumps)
+					ball.setCenterX(ball.getCenterX() + ball_jumps);
 				else {
-					ballX = getWidth()-BALL_SIZE;
+					ball.setCenterX(getWidth()-BALL_RADIUS);
 					x_right = false;
 				}
 			} else {
-				if (ballX - ball_jumps > 0)
-					ballX -= ball_jumps;
+				if (ball.getCenterX() - ball_jumps > 0)
+					ball.setCenterX(ball.getCenterX() - ball_jumps);
 				else {
-					ballX = 0;
+					ball.setCenterX(ball.getRadius());
 					x_right = true;
 				}
 			}
 
 			/* determine Y position according to it's current place */
 			if (y_down) {
-				if (getHeight() > ballY + BALL_SIZE + ball_jumps + PLAYER_HEIGHT)
-					ballY += ball_jumps;
+				if (getHeight() > ball.getCenterY() + BALL_RADIUS + ball_jumps + PLAYER_HEIGHT)
+					ball.setCenterY(ball.getCenterY() + ball_jumps);
 				else {
-					if ((ballX >= playerX-BALL_SIZE) && (ballX <= playerX+PLAYER_LENGTH+(BALL_SIZE/2))) {
-						ballY = getHeight()-BALL_SIZE-PLAYER_HEIGHT;	
+					if ((ball.getCenterX() >= player.getX()-BALL_RADIUS) && (ball.getCenterX() <= player.getX()+PLAYER_LENGTH+(BALL_RADIUS/2))) {
+						ball.setCenterY(getHeight()-BALL_RADIUS-PLAYER_HEIGHT);
 						y_down = false;
-						x_right = (ballX+(BALL_SIZE/2) > playerX+(PLAYER_LENGTH/2)) ? true : false ;
+						x_right = (ball.getCenterX()+(BALL_RADIUS/2) > player.getX()+(PLAYER_LENGTH/2)) ? true : false ;
 					}
 					else
 						isCompScore = true;
 				}
 			} else {
-				if (ballY - ball_jumps - COMP_HEIGHT > 0)
-					ballY -= ball_jumps;
-				else {
-					if ((ballX >= compX-BALL_SIZE) && (ballX <= compX+COMP_LENGTH+(BALL_SIZE/2))) {
-						ballY = COMP_HEIGHT;
+				if (ball.getCenterY() - ball.getRadius() - ball_jumps - COMP_HEIGHT > 0) {
+					ball.setCenterY(ball.getCenterY() - ball_jumps);
+				} else {
+					if ((ball.getCenterX() >= comp.getX()-BALL_RADIUS) && (ball.getCenterX() <= comp.getX()+COMP_LENGTH+(BALL_RADIUS/2))) {
+						ball.setCenterY(COMP_HEIGHT + ball.getRadius());
 						y_down = true;
-						x_right = (ballX+(BALL_SIZE/2) > compX+(COMP_LENGTH/2)) ? true : false ;
+						x_right = (ball.getCenterX()+(BALL_RADIUS/2) > comp.getX()+(COMP_LENGTH/2)) ? true : false ;
 					}
 					else
 						isPlayerScore = true;
@@ -290,19 +296,6 @@ public class PlayGroundPane extends Pane {
 
 		}
 
-	}
-
-	private void newRound() {
-		checkScore();			
-		ballX = getWidth()/2 - BALL_SIZE/2;
-		ballY = getHeight() - PLAYER_HEIGHT - BALL_SIZE;
-		playerX = getWidth()/2 - PLAYER_LENGTH/2;
-		compX = getWidth()/2 - COMP_LENGTH/2;
-		y_down = false;
-		x_right = (int)(Math.random()*2) == 1 ? true : false ;
-		timeline.stop();
-		gameON = false;
-		waitForAction = true;
 	}
 	
 	private void checkScore() {
@@ -367,7 +360,6 @@ public class PlayGroundPane extends Pane {
 		
 		gameON = false;
 		waitForAction = false;
-		//repaint();
 	}
 	
 }

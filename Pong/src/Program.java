@@ -1,9 +1,14 @@
 import javafx.application.Application;
 import javafx.event.EventHandler;
+import javafx.geometry.HPos;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
@@ -18,19 +23,19 @@ import javafx.stage.Stage;
  * */
 public class Program extends Application {
 	
-	private final int WIDTH = 250;
-	private final int HEIGHT = 380;
+	public final int WIDTH = 250;
+	public final int HEIGHT = 380;
 
 	private Stage 	primaryStage;
 	private Scene 	scene;
-	private Pane 	mainPane, topPane, playGroundPane;
-	//private Label 	lblInfo, lblFly, lblDmg;
-	
-
+	private FlowPane 	buttonPane, scorePane;
+	private GridPane	topPane;
+	private BorderPane	mainPane;
+	private PlayGroundPane playGroundPane;
 	
 	
 	public static void main(String[] args) {
-		new Program();
+		launch(args);
 	}
 	
 	
@@ -45,16 +50,37 @@ public class Program extends Application {
 		
 		primaryStage.setTitle("Pong v2.0");	// title
 		
-		mainPane = new Pane();
-		Scene scene = new Scene(mainPane, WIDTH, HEIGHT);		
+//		mainPane = new FlowPane(Orientation.VERTICAL);
+//		mainPane.setColumnHalignment(HPos.CENTER);
+//		mainPane.setAlignment(Pos.CENTER);
+//		mainPane.setVgap(30);
+		mainPane = new BorderPane();
 		
-		topPane = new Pane();
-		playGroundPane = new PlayGroundPane(topPane);
+		scene = new Scene(mainPane, WIDTH, HEIGHT);	
+		
+		topPane = new GridPane();
+		topPane.setVgap(15);
+		
+		buttonPane = new FlowPane(Orientation.HORIZONTAL);
+		buttonPane.setColumnHalignment(HPos.CENTER);
+		buttonPane.setAlignment(Pos.TOP_CENTER);
+		buttonPane.setHgap(30);
+		GridPane.setConstraints(buttonPane, 1, 2);
+		
+		scorePane = new FlowPane(Orientation.HORIZONTAL);
+		scorePane.setColumnHalignment(HPos.CENTER);
+		scorePane.setAlignment(Pos.TOP_CENTER);
+		scorePane.setHgap(30);
+		GridPane.setConstraints(scorePane, 1, 3);
+		
+		topPane.getChildren().addAll(buttonPane, scorePane);
+		
+		playGroundPane = new PlayGroundPane(buttonPane, scorePane, this);
 		//topPanel = new JPanel();
 		//PlayGroundPane = new PlayGroundPane();
 
-		mainPane.getChildren().add(topPane);
-		mainPane.getChildren().add(playGroundPane);
+		mainPane.setTop(topPane);
+		mainPane.setCenter(playGroundPane);
 		//getContentPane().add(topPanel, BorderLayout.NORTH);
 		//getContentPane().add(PlayGroundPane, BorderLayout.CENTER);
 		
@@ -68,7 +94,6 @@ public class Program extends Application {
 //				middle.y - (getHeight() / 2) - HEIGHT / 2);
 //		setLocation(newLocation);
 		
-		
 		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
 	        public void handle(KeyEvent ke) {
 	            if (ke.getCode() == KeyCode.ESCAPE) {
@@ -80,6 +105,9 @@ public class Program extends Application {
 		
 		primaryStage.setScene(scene);
 		primaryStage.show();
+		
+		playGroundPane.placeComponents();
+		playGroundPane.requestFocus();
 		
 		//setLocationRelativeTo(null);
 		//setAlwaysOnTop(false);
@@ -97,7 +125,6 @@ public class Program extends Application {
 
 		MenuBar menuBar = new MenuBar();
 		menuBar.getMenus().addAll(menu1, menu2, menu3);
-		
 		
 //		JMenu actionMenu = new JMenu("Actions");
 //		
