@@ -59,7 +59,7 @@ public class GameView extends Application {
 	
 	private void buildScene() {
 		
-		primaryStage.setTitle("Pong v2.0 <#" + viewNum + ">");		// title
+		primaryStage.setTitle("Pong v2.0 <#" + viewNum + ">");
 		
 		mainPane = new BorderPane();
 
@@ -87,13 +87,13 @@ public class GameView extends Application {
 		mainPane.setCenter(playGroundPane);
 		
 		scene.setOnKeyPressed(new EventHandler<KeyEvent>() {
-	        public void handle(KeyEvent ke) {
-	            if (ke.getCode() == KeyCode.ESCAPE) {
-	                primaryStage.close();
-	            }
-	        }
-	    });
-		
+			public void handle(KeyEvent ke) {
+				if (ke.getCode() == KeyCode.ESCAPE) {
+					primaryStage.close();
+				}
+			}
+		});
+
 		scene.widthProperty().addListener(new ChangeListener<Number>() {
 			@Override
 			public void changed(
