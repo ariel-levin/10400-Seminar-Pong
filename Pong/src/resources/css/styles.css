@@ -1,0 +1,18 @@
+/**
+ * 
+ * @author 	Ariel Levin
+ * 			<br/><a href="http://about.me/ariel.levin">about.me/ariel.levin</a>
+ * 			<br/><a href="mailto:ariel.lvn89@gmail.com">ariel.lvn89@gmail.com</a><br/><br/>
+ *
+ * */
+
+
+.popup {
+    -fx-background-color: #aad6f4;
+    -fx-padding: 10;
+    -fx-border-color: #085093;
+    -fx-text-fill: #085093;
+    -fx-font-weight: bold;
+    -fx-border-width: 5;
+    -fx-font-size: 16;
+}

@@ -1,3 +1,5 @@
+package view;
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -9,13 +11,11 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
-
 
 
 /**
@@ -33,30 +33,30 @@ public class PlayGroundPane extends Pane {
 	private final int COMP_LENGTH = 40;
 	private final int COMP_HEIGHT = 10;
 	private final int DELAY = 15;
-	
-	/* Default Values */
+
 	private final Color BALL_DEFAULT_COLOR = Color.rgb(240,175,19);
-	private final int PLAYER_DEFAULT_JUMPS = 6;
-	private final int COMP_DEFAULT_JUMPS = 1;
-	private final int BALL_DEFAULT_JUMPS = 2;
+	private final float PLAYER_DEFAULT_JUMPS = 6f;
+	private final float COMP_DEFAULT_JUMPS = 0.6f;
+	private final float BALL_DEFAULT_JUMPS = 3.5f;
 	
-	private Color ballColor = BALL_DEFAULT_COLOR;
-	private int ball_jumps = BALL_DEFAULT_JUMPS, player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
-	private int comp_jumps = COMP_DEFAULT_JUMPS, compScore = 0, playerScore = 0;
-	private boolean x_right = true, y_down = false, isNewRound = true;
+	private float ball_jumps = BALL_DEFAULT_JUMPS, player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
+	private float comp_jumps = COMP_DEFAULT_JUMPS;
+	private int compScore = 0, playerScore = 0, level = 1;
+	private double xHitPrediction;
+	private boolean ball_x_right = true, ball_y_down = false, isNewRound = true, useCompHitPrediction = false;
 	private boolean isPlayerScore = false, isCompScore = false, gameON = false, waitForAction = true;
 	private Timeline timeline;
 	private Pane buttonPane, scorePane;
-	private Label lblPlayer, lblComp;
+	private Label lblPlayer, lblComp, lblLevel;
 	private Rectangle player, comp;
 	private Circle ball;
-	//private Program program;
+	private GameView program;
 	
 
-	public PlayGroundPane(Pane buttonPane, Pane scorePane, Program program) {
+	public PlayGroundPane(Pane buttonPane, Pane scorePane, GameView program) {
 		this.buttonPane = buttonPane;
 		this.scorePane = scorePane;
-		//this.program = program;
+		this.program = program;
 		
 		timeline = new Timeline(new KeyFrame(Duration.millis(DELAY), ae -> timeLineAction()));
 		timeline.setCycleCount(Animation.INDEFINITE);
@@ -81,7 +81,7 @@ public class PlayGroundPane extends Pane {
 			public void handle(MouseEvent me) {
 				if (waitForAction) {
 					player.setX(me.getX() - PLAYER_LENGTH/2);
-					ball.setCenterX(player.getX() + PLAYER_LENGTH/2 - BALL_RADIUS/2);
+					ball.setCenterX(playerCenterX());
 				} else if (gameON)
 					player.setX(me.getX() - PLAYER_LENGTH/2);
 			}
@@ -96,6 +96,8 @@ public class PlayGroundPane extends Pane {
 						timeline.play();
 						gameON = true;
 						waitForAction = false;
+						if (useCompHitPrediction)
+							xHitPrediction = getBallXhitPrediction();
 					}
 				}
 			}
@@ -138,21 +140,24 @@ public class PlayGroundPane extends Pane {
 	}
 	
 	private void createScorePane() {
-		lblPlayer = new Label("Player: " + playerScore);
-		GridPane.setConstraints(lblPlayer, 1, 1);
+		lblPlayer = new Label();
+		lblPlayer.setStyle("-fx-font-weight: bold;");
 		scorePane.getChildren().add(lblPlayer);
-		lblComp = new Label("Computer: " + compScore);
-		GridPane.setConstraints(lblComp, 2, 1);
+		lblLevel = new Label();
+		lblLevel.setStyle("-fx-font-weight: bold;");
+		scorePane.getChildren().add(lblLevel);
+		lblComp = new Label();
+		lblComp.setStyle("-fx-font-weight: bold;");
 		scorePane.getChildren().add(lblComp);
 	}
 	
 	private void timeLineAction() {
+		ballMovement();
+		computerMovement();
 		if (isNewRound) {
 			newRound();
 			isNewRound = false;
 		}
-		ballMovement();
-		computerMovement();
 		requestFocus();
 	}
 	
@@ -172,7 +177,7 @@ public class PlayGroundPane extends Pane {
 
 		ball = new Circle();
 		ball.setRadius(BALL_RADIUS);
-		ball.setFill(ballColor);
+		ball.setFill(BALL_DEFAULT_COLOR);
 		
 		getChildren().addAll(comp, player, ball);
 		
@@ -183,14 +188,15 @@ public class PlayGroundPane extends Pane {
 	}
 	
 	private void newRound() {
-		checkScore();			
+		timeline.stop();
+		checkScore();
+		refreshScore();
 		ball.setCenterX(widthProperty().doubleValue()/2 - BALL_RADIUS/2);
 		ball.setCenterY(heightProperty().doubleValue() - PLAYER_HEIGHT - BALL_RADIUS);
 		player.setX(widthProperty().doubleValue()/2 - PLAYER_LENGTH/2);
 		comp.setX(widthProperty().doubleValue()/2 - COMP_LENGTH/2);
-		y_down = false;
-		x_right = (int)(Math.random()*2) == 1 ? true : false ;
-		timeline.stop();
+		ball_y_down = false;
+		ball_x_right = (int)(Math.random()*2) == 1 ? true : false ;
 		gameON = false;
 		waitForAction = true;
 	}
@@ -198,6 +204,7 @@ public class PlayGroundPane extends Pane {
 	private void refreshScore() {
 		lblPlayer.setText("Player: " + playerScore);
 		lblComp.setText("Computer: " + compScore);
+		lblLevel.setText("Level: " + level);
 	}
 
 	private void playerKeyboardMovement(int dir) {
@@ -207,89 +214,133 @@ public class PlayGroundPane extends Pane {
 			waitForAction = false;
 		}
 		if (gameON) {
-			if (dir==1 && (player.getX()+(PLAYER_LENGTH/2) < getWidth()))
+			if (dir==1 && (playerCenterX() < getWidth()))
 				player.setX(player.getX() + player_keyboard_jumps);
-			if (dir==(-1) && (player.getX()-player_keyboard_jumps+(PLAYER_LENGTH/2)+5 > 0))
+			if (dir==(-1) && (playerCenterX() - player_keyboard_jumps + 5 > 0))
 				player.setX(player.getX() - player_keyboard_jumps);
 		}
 	}
 
 	private void computerMovement() {
-		if (x_right && (comp.getX()+(COMP_LENGTH/2) < getWidth()))
-			comp.setX(comp.getX() + comp_jumps);
-		else if (comp.getX()-comp_jumps+(COMP_LENGTH/2)+5 > 0)
-			comp.setX(comp.getX() - comp_jumps);;
+		
+		if (useCompHitPrediction) {
+			if (ball_x_right) {
+				if (compCenterX() < xHitPrediction)
+					comp.setX(comp.getX() + comp_jumps);
+				else
+					comp.setX(comp.getX() - comp_jumps);
+			} else {
+				if (compCenterX() > xHitPrediction)
+					comp.setX(comp.getX() - comp_jumps);
+				else
+					comp.setX(comp.getX() + comp_jumps);
+			}
+		} else {
+			if (ball_x_right && (compCenterX() < getWidth()))
+				comp.setX(comp.getX() + comp_jumps);
+			else if (compCenterX() - comp_jumps + 5 > 0)
+				comp.setX(comp.getX() - comp_jumps);
+		}
+	}
+	
+	private double compCenterX() {
+		return comp.getX() + (COMP_LENGTH/2);
+	}
+	
+	private double playerCenterX() {
+		return player.getX() + (PLAYER_LENGTH/2);
+	}
+	
+	private double getBallXhitPrediction() {
+		double a = Math.sqrt(Math.pow(ball_jumps,2) + Math.pow(ball_jumps,2));
+		double theta = Math.asin(ball_jumps / a);
+		double xhit = ball.getCenterY() * Math.tan(theta);
+		if (ball_x_right) {
+			if (ball.getCenterX() + xhit > getWidth()) {	// will have wall hit
+				double yhit = ball.getCenterY() - (getWidth() - ball.getCenterX()) * Math.tan(theta);
+				xhit = getWidth() - yhit * Math.tan(theta);
+				return xhit;
+			} else
+				return ball.getCenterX() + xhit;
+		} else {
+			if (ball.getCenterX() - xhit < 0) {		// will have wall hit
+				double yhit = ball.getCenterY() - ball.getCenterX() * Math.tan(theta);
+				xhit = yhit * Math.tan(theta);
+				return xhit;
+			} else
+				return ball.getCenterX() - xhit;
+		}
 	}
 
 	private void ballMovement() {
 		/* determine X position according to it's current place */
 		if (isPlayerScore) {
-			if (ball.getCenterY() + BALL_RADIUS > 0) {
-				ball.setCenterY(ball.getCenterY() - ball_jumps);
-				if (x_right)
-					ball.setCenterX(ball.getCenterX() + ball_jumps);
-				else
-					ball.setCenterX(ball.getCenterX() - ball_jumps);
-			} else {						// player score
+			if (ball.getCenterY() + BALL_RADIUS > 0) { // goal, but still haven't crossed the goal line
+				ballMoveY();
+				ballMoveX();
+			} else {
 				playerScore++;
 				isNewRound = true;
 				isPlayerScore = false;
-				refreshScore();
 			}
 		} else if (isCompScore) {
-			if (ball.getCenterY() < getHeight()) {
-				ball.setCenterY(ball.getCenterY() + ball_jumps);
-				if (x_right)
-					ball.setCenterX(ball.getCenterX() + ball_jumps);
-				else
-					ball.setCenterX(ball.getCenterX() - ball_jumps);
-			} else {						// comp score
+			if (ball.getCenterY() < getHeight()) {	// goal, but still haven't crossed the goal line
+				ballMoveY();
+				ballMoveX();
+			} else {
 				compScore++;
 				isNewRound = true;
 				isCompScore = false;
-				refreshScore();
 			}
 		} else {
 
-			if (x_right) {
+			if (ball_x_right) {
 				if (getWidth() > ball.getCenterX() + BALL_RADIUS + ball_jumps)
-					ball.setCenterX(ball.getCenterX() + ball_jumps);
+					ballMoveX();
 				else {
 					ball.setCenterX(getWidth()-BALL_RADIUS);
-					x_right = false;
+					ball_x_right = false;
+					if (useCompHitPrediction)
+						xHitPrediction = getBallXhitPrediction();
 				}
 			} else {
 				if (ball.getCenterX() - ball_jumps > 0)
-					ball.setCenterX(ball.getCenterX() - ball_jumps);
+					ballMoveX();
 				else {
 					ball.setCenterX(ball.getRadius());
-					x_right = true;
+					ball_x_right = true;
+					if (useCompHitPrediction)
+						xHitPrediction = getBallXhitPrediction();
 				}
 			}
 
 			/* determine Y position according to it's current place */
-			if (y_down) {
-				if (getHeight() > ball.getCenterY() + BALL_RADIUS + ball_jumps + PLAYER_HEIGHT)
-					ball.setCenterY(ball.getCenterY() + ball_jumps);
-				else {
-					if ((ball.getCenterX() >= player.getX()-BALL_RADIUS) && (ball.getCenterX() <= player.getX()+PLAYER_LENGTH+(BALL_RADIUS/2))) {
+			if (ball_y_down) {
+				if (getHeight() > ball.getCenterY() + BALL_RADIUS + ball_jumps + PLAYER_HEIGHT) {
+					ballMoveY();
+				} else {
+					if ((ball.getCenterX() + BALL_RADIUS >= player.getX()) && (ball.getCenterX() - BALL_RADIUS <= player.getX() + PLAYER_LENGTH)) {
 						ball.setCenterY(getHeight()-BALL_RADIUS-PLAYER_HEIGHT);
-						y_down = false;
-						x_right = (ball.getCenterX()+(BALL_RADIUS/2) > player.getX()+(PLAYER_LENGTH/2)) ? true : false ;
+						ball_x_right = (ball.getCenterX() + BALL_RADIUS > playerCenterX()) ? true : false ;
+						ball_y_down = false;
+						if (useCompHitPrediction)
+							xHitPrediction = getBallXhitPrediction();
 					}
 					else
 						isCompScore = true;
 				}
 			} else {
 				if (ball.getCenterY() - ball.getRadius() - ball_jumps - COMP_HEIGHT > 0) {
-					ball.setCenterY(ball.getCenterY() - ball_jumps);
+					ballMoveY();
 				} else {
-					if ((ball.getCenterX() >= comp.getX()-BALL_RADIUS) && (ball.getCenterX() <= comp.getX()+COMP_LENGTH+(BALL_RADIUS/2))) {
+					if ((ball.getCenterX() + 2*BALL_RADIUS >= comp.getX()) && (ball.getCenterX() - 2*BALL_RADIUS <= comp.getX() + COMP_LENGTH)) {
 						ball.setCenterY(COMP_HEIGHT + ball.getRadius());
-						y_down = true;
-						x_right = (ball.getCenterX()+(BALL_RADIUS/2) > comp.getX()+(COMP_LENGTH/2)) ? true : false ;
+						ball_x_right = (ball.getCenterX() + BALL_RADIUS > compCenterX()) ? true : false ;
+						ball_y_down = true;
+						if (useCompHitPrediction)
+							xHitPrediction = getBallXhitPrediction();
 					}
-					else
+					else 
 						isPlayerScore = true;
 				}
 			}
@@ -298,34 +349,58 @@ public class PlayGroundPane extends Pane {
 
 	}
 	
+	private void ballMoveX() {
+		if (ball_x_right)
+			ball.setCenterX(ball.getCenterX() + ball_jumps);
+		else
+			ball.setCenterX(ball.getCenterX() - ball_jumps);
+	}
+	
+	private void ballMoveY() {
+		if (ball_y_down)
+			ball.setCenterY(ball.getCenterY() + ball_jumps);
+		else
+			ball.setCenterY(ball.getCenterY() - ball_jumps);
+	}
+	
 	private void checkScore() {
-		if (playerScore == 5) {
-			ball_jumps = BALL_DEFAULT_JUMPS+1;
-			ballColor = Color.rgb(78,210,48);
-		}
-		if (playerScore == 20) {
-			ball_jumps = BALL_DEFAULT_JUMPS+2;
-			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS+1;
-			comp_jumps = COMP_DEFAULT_JUMPS+1;
-			ballColor = Color.rgb(18,184,225);
-		}
-		if (playerScore == 40) {
-			ball_jumps = BALL_DEFAULT_JUMPS+3;
-			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS+2;
-			comp_jumps = COMP_DEFAULT_JUMPS+2;
-			ballColor = Color.rgb(240,29,228);
-		}
-		if (playerScore == 80) {
-			ball_jumps = BALL_DEFAULT_JUMPS+4;
-			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS+3;
-			comp_jumps = COMP_DEFAULT_JUMPS+3;
-			ballColor = Color.rgb(245,0,58);
-		}
-		if (playerScore == 160) {
-			ball_jumps = BALL_DEFAULT_JUMPS+5;
-			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS+4;
-			comp_jumps = COMP_DEFAULT_JUMPS+4;
-			ballColor = Color.rgb(0,42,255);
+		
+		switch (playerScore) {
+		case 2:
+			ball_jumps = BALL_DEFAULT_JUMPS + 0.5f;
+			ball.setFill(Color.rgb(78,210,48));
+			level = 2;
+			break;
+		case 4:
+			ball_jumps = BALL_DEFAULT_JUMPS + 1;
+			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 0.5f;
+			comp_jumps = COMP_DEFAULT_JUMPS + 0.5f;
+			ball.setFill(Color.rgb(18,184,225));
+			level = 3;
+			break;
+		case 8:
+			useCompHitPrediction = true;
+			program.getPrimaryStage().setWidth(program.getPrimaryStage().widthProperty().doubleValue() * 1.37);
+			ball_jumps = BALL_DEFAULT_JUMPS + 1.5f;
+			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.1f;
+			comp_jumps = COMP_DEFAULT_JUMPS + 1.1f;
+			ball.setFill(Color.rgb(240,29,228));
+			level = 4;
+			break;
+		case 16:
+			ball_jumps = BALL_DEFAULT_JUMPS + 2;
+			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.3f;
+			comp_jumps = COMP_DEFAULT_JUMPS + 1.3f;
+			ball.setFill(Color.rgb(245,0,58));
+			level = 5;
+			break;
+		case 32:
+			ball_jumps = BALL_DEFAULT_JUMPS + 3;
+			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.5f;
+			comp_jumps = COMP_DEFAULT_JUMPS + 1.5f;
+			ball.setFill(Color.rgb(0,42,255));
+			level = 6;
+			break;
 		}
 	}
 
@@ -348,7 +423,6 @@ public class PlayGroundPane extends Pane {
 	public void stop() {
 		if (gameON)
 			timeline.stop();
-		newRound();
 		
 		compScore = 0;
 		playerScore = 0;
@@ -356,10 +430,16 @@ public class PlayGroundPane extends Pane {
 		player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
 		comp_jumps = COMP_DEFAULT_JUMPS;
 		ball_jumps = BALL_DEFAULT_JUMPS;
-		ballColor = BALL_DEFAULT_COLOR;
+		ball.setFill(BALL_DEFAULT_COLOR);
 		
 		gameON = false;
 		waitForAction = false;
+		
+		newRound();
+	}
+	
+	public void windowsSizeChanged() {
+		newRound();
 	}
 	
 }
