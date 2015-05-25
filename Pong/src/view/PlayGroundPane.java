@@ -50,10 +50,10 @@ public class PlayGroundPane extends Pane {
 	private Label lblPlayer, lblComp, lblLevel;
 	private Rectangle player, comp;
 	private Circle ball;
-	private GameView program;
+	private PongView program;
 	
 
-	public PlayGroundPane(Pane buttonPane, Pane scorePane, GameView program) {
+	public PlayGroundPane(Pane buttonPane, Pane scorePane, PongView program) {
 		this.buttonPane = buttonPane;
 		this.scorePane = scorePane;
 		this.program = program;

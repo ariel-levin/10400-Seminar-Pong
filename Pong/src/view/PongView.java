@@ -30,22 +30,22 @@ import javafx.stage.WindowEvent;
  * 			<br/><a href="mailto:ariel.lvn89@gmail.com">ariel.lvn89@gmail.com</a><br/><br/>
  *
  * */
-public class GameView extends Application {
+public class PongView extends Application {
 	
 	public final int WIDTH = 270;
 	public final int HEIGHT = 420;
 
-	private int		viewNum;
-	private Stage 	primaryStage;
-	private Scene 	scene;
-	private HBox	buttonPane, scorePane;
-	private VBox		topBox;
-	private BorderPane	mainPane;
-	private PlayGroundPane playGroundPane;
+	private int				viewNum;
+	private Stage 			primaryStage;
+	private Scene 			scene;
+	private HBox			buttonPane, scorePane;
+	private VBox			topBox;
+	private BorderPane		mainPane;
+	private PlayGroundPane 	playGroundPane;
 	
 	
 	
-	public GameView(int viewNum) {
+	public PongView(int viewNum) {
 		super();
 		this.viewNum = viewNum;
 	}
