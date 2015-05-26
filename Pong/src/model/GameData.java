@@ -5,11 +5,8 @@ import events.PongEvents;
 
 public class GameData implements PongEvents {
 
-	private int			viewNum;
-	private int 		playerScore;
-	private int 		compScore;
-	private int 		level;
-	private GameState 	gameState;
+	private int			viewNum, playerScore, compScore, level;
+	private GameState	gameState;
 	
 	
 	public GameData(int viewNum, int playerScore, int compScore, int level,

@@ -69,7 +69,7 @@ public class Program extends Application {
 			public void handle(ActionEvent arg0) {
 				
 				// adding view
-				controller.setModel(new PongModel(controller));		// creating model
+				controller.setModel(new PongModel());		// creating model
 				btnAddView.setDisable(false);
 				btnCreateModel.setDisable(true);
 			}
@@ -83,7 +83,7 @@ public class Program extends Application {
 			public void handle(ActionEvent arg0) {
 				
 				// adding view
-				controller.addView(new PongView(++viewsCounter, controller));
+				controller.addView(new PongView(++viewsCounter));
 			}
 		});
 		

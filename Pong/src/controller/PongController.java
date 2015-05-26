@@ -1,5 +1,6 @@
 package controller;
 
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,35 +23,79 @@ import view.PongView;
 public class PongController implements PongEvents, PongListener, PongUIListener {
 
 	private PongModel									model;
-	private ArrayList<PongView> 						views;
+	private Map<Integer, PongView>						views;
 	private Map<EventType, ArrayList<ActionListener>> 	listenersMap;
 	
 	
 	public PongController() {
 		
-		views 			= new ArrayList<PongView>();
+		views 			= new HashMap<Integer, PongView>();
 		listenersMap 	= new HashMap<EventType, ArrayList<ActionListener>>();
 	}
 	
 	
 	public void setModel(PongModel model) {
 		this.model = model;
+		model.setController(this);
 	}
 
 	public void addView(PongView pongView) {
-		views.add(pongView);
+		views.put(pongView.getViewNum(), pongView);
 		try {
 			Stage pongViewStage = new Stage();
-			views.get(views.size() - 1).start(pongViewStage);
+			views.get(pongView.getViewNum()).start(pongViewStage);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		pongView.setController(this);
 	}
 	
 	public int getViewsCount() {
 		return views.size();
 	}
+	
+	
+	///////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	
+	
+	public synchronized void addActionListener(ActionListener l, EventType et) {
+		ArrayList<ActionListener> al;
+		al = listenersMap.get(et);
+		if (al == null)
+			al = new ArrayList<ActionListener>();
+		al.add(l);
+		listenersMap.put(et, al);
+	}
 
+	public synchronized void removeActionListener(ActionListener l, EventType et) {
+		ArrayList<ActionListener> al;
+		al = listenersMap.get(et);
+		if (al != null && al.contains(l))
+			al.remove(l);
+		listenersMap.put(et, al);
+	}
+
+	public void processEvent(EventType et, ActionEvent e) {
+		ArrayList<ActionListener> al;
+		synchronized (this) {
+			al = listenersMap.get(et);
+			if (al == null)
+				return;
+		}
+		
+		for (int i = 0; i < al.size(); i++) {
+			ActionListener listener = (ActionListener) al.get(i);
+			listener.actionPerformed(e);
+		}
+	}
+
+	
+	///////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	
 
 	@Override
 	public void playerGoal(int viewNum, int score) {

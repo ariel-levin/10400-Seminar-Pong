@@ -261,7 +261,7 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				model.playPressed(cbViews.getValue());
+				model.modelUIplayPressed(cbViews.getValue());
 			}
 		});
 		
@@ -269,7 +269,7 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				model.pausePressed(cbViews.getValue());
+				model.modelUIpausePressed(cbViews.getValue());
 			}
 		});
 		
@@ -277,7 +277,7 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				model.stopPressed(cbViews.getValue());
+				model.modelUIstopPressed(cbViews.getValue());
 			}
 		});
 		
@@ -318,8 +318,7 @@ public class PongModelUI extends Application implements PongEvents {
 	
 	public void viewAdded(GameData game) {
 		tableData.add(game);
-		cbViews.getItems().add(game);
-		cbViews.setItems(new SortedList<GameData>(cbViews.getItems(), new Comparator<GameData>() {
+		cbViews.setItems(new SortedList<GameData>(tableData, new Comparator<GameData>() {
 
 			@Override
 			public int compare(GameData o1, GameData o2) {

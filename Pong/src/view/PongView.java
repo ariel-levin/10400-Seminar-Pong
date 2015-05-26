@@ -1,10 +1,14 @@
 package view;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import controller.PongController;
+import events.PongEvents.EventType;
+import events.PongEvents.GameState;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -43,15 +47,13 @@ public class PongView extends Application {
 	private VBox			topBox;
 	private BorderPane		mainPane;
 	private PlayGroundPane 	playGroundPane;
-	
 	private PongController 	controller;
 	
+	/// make setController method, that addActionListeners
 	
-	
-	public PongView(int viewNum, PongController controller) {
+	public PongView(int viewNum) {
 		super();
 		this.viewNum = viewNum;
-		this.controller = controller;
 	}
 
 	@Override
@@ -85,7 +87,7 @@ public class PongView extends Application {
 		
 		topBox.getChildren().addAll(buttonPane, scorePane);
 		
-		playGroundPane = new PlayGroundPane(buttonPane, scorePane, this);
+		playGroundPane = new PlayGroundPane(this);
 
 		mainPane.setTop(topBox);
 		mainPane.setCenter(playGroundPane);
@@ -97,6 +99,15 @@ public class PongView extends Application {
 				}
 			}
 		});
+		
+		primaryStage.setOnCloseRequest((new EventHandler<WindowEvent>() {
+
+			@Override
+			public void handle(WindowEvent arg0) {
+
+				controller.processEvent(EventType.VIEW_CLOSE, new ActionEvent(PongView.this, viewNum, EventType.VIEW_CLOSE.toString()));
+			}
+		}));
 
 		scene.widthProperty().addListener(new ChangeListener<Number>() {
 			@Override
@@ -129,10 +140,10 @@ public class PongView extends Application {
 		final Menu fileMenu = new Menu("File");
 
 		MenuItem exitMenuItem = new MenuItem("Exit");
-		exitMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+		exitMenuItem.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
 
 			@Override
-			public void handle(ActionEvent arg0) {
+			public void handle(javafx.event.ActionEvent arg0) {
 				primaryStage.close();
 			}
 		});
@@ -143,28 +154,28 @@ public class PongView extends Application {
 		final Menu actionMenu = new Menu("Actions");
 		
 		MenuItem startMenuItem = new MenuItem("Start");
-		startMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+		startMenuItem.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
 
 			@Override
-			public void handle(ActionEvent arg0) {
-				playGroundPane.start();
+			public void handle(javafx.event.ActionEvent arg0) {
+				playGroundPane.play();
 			}
 		});
 		
 		MenuItem pauseMenuItem = new MenuItem("Pause");
-		pauseMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+		pauseMenuItem.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
 
 			@Override
-			public void handle(ActionEvent arg0) {
+			public void handle(javafx.event.ActionEvent arg0) {
 				playGroundPane.pause();
 			}
 		});
 		
 		MenuItem stopMenuItem = new MenuItem("Stop");
-		stopMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+		stopMenuItem.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
 
 			@Override
-			public void handle(ActionEvent arg0) {
+			public void handle(javafx.event.ActionEvent arg0) {
 				playGroundPane.stop();
 			}
 		});
@@ -176,10 +187,10 @@ public class PongView extends Application {
 		final Menu helpMenu = new Menu("Help");
 		
 		MenuItem aboutMenuItem = new MenuItem("About");
-		aboutMenuItem.setOnAction(new EventHandler<ActionEvent>() {
+		aboutMenuItem.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
 
 			@Override
-			public void handle(ActionEvent arg0) {
+			public void handle(javafx.event.ActionEvent arg0) {
 				String msg = 	"Ariel Levin\n" +
 								"ariel.lvn89@gmail.com\n" +
 								"http://about.me/ariel.levin";
@@ -223,6 +234,18 @@ public class PongView extends Application {
 	    return popup;
 	}
 
+	public void setController(PongController controller) {
+		this.controller = controller;
+		if (controller != null) {
+			controller.addActionListener(new PlayEvent(), EventType.MODEL_PLAY);
+			controller.addActionListener(new PauseEvent(), EventType.MODEL_PAUSE);
+			controller.addActionListener(new StopEvent(), EventType.MODEL_STOP);
+			controller.addActionListener(new LevelEvent(), EventType.LEVEL);
+			
+			controller.processEvent(EventType.VIEW_OPEN, new ActionEvent(this, viewNum, EventType.VIEW_OPEN.toString()));
+		}
+	}
+
 	public Stage getPrimaryStage() {
 		return primaryStage;
 	}
@@ -230,7 +253,79 @@ public class PongView extends Application {
 	public Scene getScene() {
 		return scene;
 	}
+
 	
+	public HBox getButtonPane() {
+		return buttonPane;
+	}
+
+	
+	public HBox getScorePane() {
+		return scorePane;
+	}
+
+	
+	public int getViewNum() {
+		return viewNum;
+	}
+	
+	public int getCompScore() {
+		return playGroundPane.getCompScore();
+	}
+
+	public int getPlayerScore() {
+		return playGroundPane.getPlayerScore();
+	}
+
+	public int getLevel() {
+		return playGroundPane.getLevel();
+	}
+
+	public GameState getGameState() {
+		return playGroundPane.getGameState();
+	}
+	
+	
+	///////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	///////////////////////////////////////////////////////////////////////////
+	
+	
+	class PlayEvent implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			
+			playGroundPane.play();
+		}
+	}
+	
+	class PauseEvent implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			
+			playGroundPane.pause();
+		}
+	}
+	
+	class StopEvent implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			
+			playGroundPane.stop();
+		}
+	}
+	
+	class LevelEvent implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+	}
 	
 }
 

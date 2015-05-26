@@ -1,5 +1,6 @@
 package view;
 
+import events.PongEvents;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -25,7 +26,7 @@ import javafx.util.Duration;
  * 			<br/><a href="mailto:ariel.lvn89@gmail.com">ariel.lvn89@gmail.com</a><br/><br/>
  *
  * */
-public class PlayGroundPane extends Pane {
+public class PlayGroundPane extends Pane implements PongEvents {
 
 	private final int BALL_RADIUS = 5;
 	private final int PLAYER_LENGTH = 40;
@@ -39,24 +40,22 @@ public class PlayGroundPane extends Pane {
 	private final float COMP_DEFAULT_JUMPS = 0.6f;
 	private final float BALL_DEFAULT_JUMPS = 3.5f;
 	
-	private float ball_jumps = BALL_DEFAULT_JUMPS, player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
-	private float comp_jumps = COMP_DEFAULT_JUMPS;
-	private int compScore = 0, playerScore = 0, level = 1;
-	private double xHitPrediction;
-	private boolean ball_x_right = true, ball_y_down = false, isNewRound = true, useCompHitPrediction = false;
-	private boolean isPlayerScore = false, isCompScore = false, gameON = false, waitForAction = true;
-	private Timeline timeline;
-	private Pane buttonPane, scorePane;
-	private Label lblPlayer, lblComp, lblLevel;
-	private Rectangle player, comp;
-	private Circle ball;
-	private PongView program;
+	private float 		ball_jumps = BALL_DEFAULT_JUMPS, player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
+	private float 		comp_jumps = COMP_DEFAULT_JUMPS;
+	private int 		compScore = 0, playerScore = 0, level = 1;
+	private double 		xHitPrediction;
+	private boolean 	ball_x_right = true, ball_y_down = false, isNewRound = true, useCompHitPrediction = false;
+	private boolean 	isPlayerScore = false, isCompScore = false, gameON = false, waitForAction = true;
+	private Timeline 	timeline;
+	private Label 		lblPlayer, lblComp, lblLevel;
+	private Rectangle 	player, comp;
+	private Circle 		ball;
+	private GameState	gameState = GameState.STOP;
+	private PongView 	pongView;
 	
 
-	public PlayGroundPane(Pane buttonPane, Pane scorePane, PongView program) {
-		this.buttonPane = buttonPane;
-		this.scorePane = scorePane;
-		this.program = program;
+	public PlayGroundPane(PongView pongView) {
+		this.pongView = pongView;
 		
 		timeline = new Timeline(new KeyFrame(Duration.millis(DELAY), ae -> timeLineAction()));
 		timeline.setCycleCount(Animation.INDEFINITE);
@@ -107,12 +106,12 @@ public class PlayGroundPane extends Pane {
 
 	private void createButtonPane() {
 
-		Button start = new Button("Start");
-		start.setOnAction(new EventHandler<ActionEvent>() {
+		Button play = new Button("Play");
+		play.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				start();
+				play();
 			}
 		});
 
@@ -134,19 +133,19 @@ public class PlayGroundPane extends Pane {
 			}
 		});
 		
-		buttonPane.getChildren().addAll(start, pause, stop);
+		pongView.getButtonPane().getChildren().addAll(play, pause, stop);
 	}
 	
 	private void createScorePane() {
 		lblPlayer = new Label();
 		lblPlayer.setStyle("-fx-font-weight: bold;");
-		scorePane.getChildren().add(lblPlayer);
+		pongView.getScorePane().getChildren().add(lblPlayer);
 		lblLevel = new Label();
 		lblLevel.setStyle("-fx-font-weight: bold;");
-		scorePane.getChildren().add(lblLevel);
+		pongView.getScorePane().getChildren().add(lblLevel);
 		lblComp = new Label();
 		lblComp.setStyle("-fx-font-weight: bold;");
-		scorePane.getChildren().add(lblComp);
+		pongView.getScorePane().getChildren().add(lblComp);
 	}
 	
 	private void timeLineAction() {
@@ -378,7 +377,7 @@ public class PlayGroundPane extends Pane {
 			break;
 		case 8:
 			useCompHitPrediction = true;
-			program.getPrimaryStage().setWidth(program.getPrimaryStage().widthProperty().doubleValue() * 1.37);
+			pongView.getPrimaryStage().setWidth(pongView.getPrimaryStage().widthProperty().doubleValue() * 1.37);
 			ball_jumps = BALL_DEFAULT_JUMPS + 1.5f;
 			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.1f;
 			comp_jumps = COMP_DEFAULT_JUMPS + 1.1f;
@@ -402,11 +401,12 @@ public class PlayGroundPane extends Pane {
 		}
 	}
 
-	public void start() {
+	public void play() {
 		if (gameON == false) {
 			timeline.play();
 			gameON = true;
 			waitForAction = false;
+			gameState = GameState.PLAY;
 		}
 	}
 	
@@ -415,6 +415,7 @@ public class PlayGroundPane extends Pane {
 			timeline.stop();
 			gameON = false;
 			waitForAction = false;
+			gameState = GameState.PAUSE;
 		}
 	}
 	
@@ -434,10 +435,31 @@ public class PlayGroundPane extends Pane {
 		waitForAction = false;
 		
 		newRound();
+		
+		gameState = GameState.STOP;
 	}
 	
 	public void windowsSizeChanged() {
 		newRound();
+	}
+
+	
+	public int getCompScore() {
+		return compScore;
+	}
+
+	
+	public int getPlayerScore() {
+		return playerScore;
+	}
+
+	
+	public int getLevel() {
+		return level;
+	}
+
+	public GameState getGameState() {
+		return gameState;
 	}
 	
 }
