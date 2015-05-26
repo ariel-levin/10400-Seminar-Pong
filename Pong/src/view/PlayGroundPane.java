@@ -108,7 +108,6 @@ public class PlayGroundPane extends Pane {
 	private void createButtonPane() {
 
 		Button start = new Button("Start");
-		buttonPane.getChildren().add(start);
 		start.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -118,7 +117,6 @@ public class PlayGroundPane extends Pane {
 		});
 
 		Button pause = new Button("Pause");
-		buttonPane.getChildren().add(pause);
 		pause.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -128,7 +126,6 @@ public class PlayGroundPane extends Pane {
 		});
 
 		Button stop = new Button("Stop");
-		buttonPane.getChildren().add(stop);
 		stop.setOnAction(new EventHandler<ActionEvent>() {
 
 			@Override
@@ -136,7 +133,8 @@ public class PlayGroundPane extends Pane {
 				stop();
 			}
 		});
-
+		
+		buttonPane.getChildren().addAll(start, pause, stop);
 	}
 	
 	private void createScorePane() {

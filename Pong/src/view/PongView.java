@@ -1,5 +1,6 @@
 package view;
 
+import controller.PongController;
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -43,11 +44,14 @@ public class PongView extends Application {
 	private BorderPane		mainPane;
 	private PlayGroundPane 	playGroundPane;
 	
+	private PongController 	controller;
 	
 	
-	public PongView(int viewNum) {
+	
+	public PongView(int viewNum, PongController controller) {
 		super();
 		this.viewNum = viewNum;
+		this.controller = controller;
 	}
 
 	@Override

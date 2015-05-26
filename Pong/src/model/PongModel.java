@@ -1,5 +1,8 @@
 package model;
 
+import java.util.ArrayList;
+
+import controller.PongController;
 import javafx.stage.Stage;
 
 
@@ -12,10 +15,14 @@ import javafx.stage.Stage;
  * */
 public class PongModel {
 
-	private PongModelUI modelUI;
+	private PongModelUI 			modelUI;
+	private PongController 			controller;
+	private ArrayList<GameData>		gameData;
 	
 	
-	public PongModel() {
+	public PongModel(PongController controller) {
+		
+		this.controller = controller;
 		
 		modelUI = new PongModelUI();
 		try {

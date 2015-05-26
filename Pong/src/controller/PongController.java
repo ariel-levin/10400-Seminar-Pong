@@ -1,8 +1,12 @@
 package controller;
 
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
-
+import java.util.HashMap;
+import java.util.Map;
 import events.PongEvents;
+import events.PongListener;
+import events.PongUIListener;
 import javafx.stage.Stage;
 import model.PongModel;
 import view.PongView;
@@ -15,15 +19,17 @@ import view.PongView;
  * 			<br/><a href="mailto:ariel.lvn89@gmail.com">ariel.lvn89@gmail.com</a><br/><br/>
  *
  * */
-public class PongController implements PongEvents {
+public class PongController implements PongEvents, PongListener, PongUIListener {
 
-	private PongModel			model;
-	private ArrayList<PongView> views;
+	private PongModel									model;
+	private ArrayList<PongView> 						views;
+	private Map<EventType, ArrayList<ActionListener>> 	listenersMap;
 	
 	
 	public PongController() {
 		
-		views = new ArrayList<PongView>();
+		views 			= new ArrayList<PongView>();
+		listenersMap 	= new HashMap<EventType, ArrayList<ActionListener>>();
 	}
 	
 	
@@ -61,28 +67,21 @@ public class PongController implements PongEvents {
 
 
 	@Override
-	public void playerLevel(int level) {
+	public void userPlayPressed() {
 		// TODO Auto-generated method stub
 		
 	}
 
 
 	@Override
-	public void playing() {
+	public void userStopPressed() {
 		// TODO Auto-generated method stub
 		
 	}
 
 
 	@Override
-	public void stopped() {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-	@Override
-	public void paused() {
+	public void userPausePressed() {
 		// TODO Auto-generated method stub
 		
 	}
@@ -93,5 +92,14 @@ public class PongController implements PongEvents {
 		// TODO Auto-generated method stub
 		
 	}
+
+
+	@Override
+	public void changeLevel(int level) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
 	
 }

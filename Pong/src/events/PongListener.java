@@ -8,14 +8,8 @@ package events;
  * 			<br/><a href="mailto:ariel.lvn89@gmail.com">ariel.lvn89@gmail.com</a><br/><br/>
  *
  * */
-public interface PongEvents {
-
-	enum EventType {
-		PLAYER_GOAL, COMP_GOAL, LEVEL, GAME_STATUS, GAME_START
-	}
+public interface PongListener {
 	
-	enum GameState {
-		PLAY, PAUSE, STOP
-	}
-
+	public void changeLevel(int level);
+	
 }
