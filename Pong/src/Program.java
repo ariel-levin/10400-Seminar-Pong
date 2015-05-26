@@ -28,12 +28,12 @@ public class Program extends Application {
 	public final int WIDTH 	= 300;
 	public final int HEIGHT = 150;
 
-	private Stage 	primaryStage;
-	private Scene 	scene;
-	private HBox	mainPane;
-	private Button 	btnAddView, btnCreateModel;
-
-	private PongController controller;
+	private Stage 			primaryStage;
+	private Scene 			scene;
+	private HBox			mainPane;
+	private Button 			btnAddView, btnCreateModel;
+	private PongController 	controller;
+	private int				viewsCounter = 0;
 	
 	
 	public static void main(String[] args) {
@@ -83,7 +83,7 @@ public class Program extends Application {
 			public void handle(ActionEvent arg0) {
 				
 				// adding view
-				controller.addView(new PongView(controller.getViewsCount() + 1, controller));
+				controller.addView(new PongView(++viewsCounter, controller));
 			}
 		});
 		

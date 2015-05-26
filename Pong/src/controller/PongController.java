@@ -53,53 +53,65 @@ public class PongController implements PongEvents, PongListener, PongUIListener 
 
 
 	@Override
-	public void playerGoal(int score) {
+	public void playerGoal(int viewNum, int score) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
 	@Override
-	public void compGoal(int score) {
+	public void compGoal(int viewNum, int score) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
 	@Override
-	public void userPlayPressed() {
+	public void userPlayPressed(int viewNum) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
 	@Override
-	public void userStopPressed() {
+	public void userStopPressed(int viewNum) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
 	@Override
-	public void userPausePressed() {
+	public void userPausePressed(int viewNum) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
 	@Override
-	public void gameStarted() {
+	public void gameStarted(int viewNum) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
 	@Override
-	public void changeLevel(int level) {
+	public void viewOpened(int viewNum) {
 		// TODO Auto-generated method stub
 		
 	}
 
 
+	@Override
+	public void viewClosed(int viewNum) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	@Override
+	public void changeLevel(int viewNum, int level) {
+		// TODO Auto-generated method stub
+		
+	}
 	
 }

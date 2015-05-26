@@ -10,16 +10,20 @@ package events;
  * */
 public interface PongUIListener {
 	
-	public void playerGoal(int score);
+	public void playerGoal(int viewNum, int score);
 	
-	public void compGoal(int score);
+	public void compGoal(int viewNum, int score);
 
-	public void userPlayPressed();
+	public void userPlayPressed(int viewNum);
 	
-	public void userStopPressed();
+	public void userStopPressed(int viewNum);
 	
-	public void userPausePressed();
+	public void userPausePressed(int viewNum);
 	
-	public void gameStarted();
+	public void gameStarted(int viewNum);
+	
+	public void viewOpened(int viewNum);
+	
+	public void viewClosed(int viewNum);
 	
 }

@@ -10,6 +10,6 @@ package events;
  * */
 public interface PongListener {
 	
-	public void changeLevel(int level);
+	public void changeLevel(int viewNum, int level);
 	
 }

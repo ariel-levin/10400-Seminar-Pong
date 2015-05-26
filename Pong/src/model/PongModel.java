@@ -24,13 +24,25 @@ public class PongModel {
 		
 		this.controller = controller;
 		
-		modelUI = new PongModelUI();
+		modelUI = new PongModelUI(this);
 		try {
 			Stage gameViewStage = new Stage();
 			modelUI.start(gameViewStage);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+	}
+	
+	public void playPressed(GameData game) {
+		
+	}
+	
+	public void pausePressed(GameData game) {
+		
+	}
+	
+	public void stopPressed(GameData game) {
 		
 	}
 	

@@ -1,24 +1,32 @@
 package model;
 
-import events.PongEvents;
+import java.util.Comparator;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Callback;
+import events.PongEvents;
 
 
 /**
@@ -30,15 +38,23 @@ import javafx.util.Callback;
  * */
 public class PongModelUI extends Application implements PongEvents {
 
-	public final int WIDTH 	= 485;
-	public final int HEIGHT = 300;
+	public final int WIDTH 	= 500;
+	public final int HEIGHT = 450;
 
+	private PongModel					model;
 	private Stage 						primaryStage;
 	private Scene 						scene;
 	private BorderPane					mainPane;
 	private TableView<GameData>			table;
 	private ObservableList<GameData> 	tableData = FXCollections.observableArrayList();
-
+	private ComboBox<GameData> 			cbViews;
+	private TextArea					console;
+	
+	
+	public PongModelUI(PongModel model) {
+		super();
+		this.model = model;
+	}
 
 	@Override
 	public void start(Stage arg0) throws Exception {
@@ -46,7 +62,7 @@ public class PongModelUI extends Application implements PongEvents {
 		buildScene();
 	}
 	
-	
+
 	private void buildScene() {
 		
 		primaryStage.setTitle("Pong Model");
@@ -230,13 +246,133 @@ public class PongModelUI extends Application implements PongEvents {
 	
 	private void createTopControlPanel() {
 		
-		tableData.add(new GameData(1,5,0,2,GameState.PLAY));
+		HBox topPanel = new HBox();
+		topPanel.setAlignment(Pos.CENTER);
+		topPanel.setPadding(new Insets(10,20,20,20));
+		topPanel.spacingProperty().bind(mainPane.widthProperty().divide(8));
 		
+		cbViews = new ComboBox<GameData>();
+		
+		Button btnPlay 	= new Button("Play");
+		Button btnPause = new Button("Pause");
+		Button btnStop 	= new Button("Stop");
+		
+		btnPlay.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				model.playPressed(cbViews.getValue());
+			}
+		});
+		
+		btnPause.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				model.pausePressed(cbViews.getValue());
+			}
+		});
+		
+		btnStop.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				model.stopPressed(cbViews.getValue());
+			}
+		});
+		
+		topPanel.getChildren().addAll(cbViews, btnPlay, btnPause, btnStop);
+		mainPane.setTop(topPanel);
 	}
 	
 	private void createConsole() {
-		tableData.get(0).setLevel(5);
+
+		HBox bottomPanel = new HBox();
+		bottomPanel.setAlignment(Pos.CENTER);
+		bottomPanel.setPadding(new Insets(10,0,0,0));
+		
+		console = new TextArea();
+		console.setEditable(false);
+		console.setPrefSize(mainPane.getWidth(), 120);
+		console.prefWidthProperty().bind(mainPane.widthProperty());
+		
+		bottomPanel.getChildren().add(console);
+		mainPane.setBottom(bottomPanel);
 	}
 
+	private int getViewIndexInTable(GameData game) {
+		for (int i = 0; i < tableData.size(); i++ ) {
+			if (tableData.get(i).getViewNum() == game.getViewNum())
+				return i;
+		}
+		return -1;
+	}
+	
+	private int getViewIndexInComboBox(GameData game) {
+		for (int i = 0 ; i < cbViews.getItems().size(); i++ ) {
+			if (cbViews.getItems().get(i).getViewNum() == game.getViewNum())
+				return i;
+		}
+		return -1;
+	}
+	
+	public void viewAdded(GameData game) {
+		tableData.add(game);
+		cbViews.getItems().add(game);
+		cbViews.setItems(new SortedList<GameData>(cbViews.getItems(), new Comparator<GameData>() {
+
+			@Override
+			public int compare(GameData o1, GameData o2) {
+				return Integer.compare(o1.getViewNum(), o2.getViewNum());
+			}
+		}));
+		
+		console.setText(console.getText() + "\nView #" + game.getViewNum() + " was added");
+	}
+	
+	public void viewClosed(GameData game) {
+		int index = getViewIndexInTable(game);
+		if (index != -1)
+			tableData.remove(index);
+		
+		index = getViewIndexInComboBox(game);
+		if (index != -1)
+			cbViews.getItems().remove(index);
+		
+		console.setText(console.getText() + "\nView #" + game.getViewNum() + " was closed");
+	}
+	
+	public void playerScoreChanged(GameData game) {
+		int index = getViewIndexInTable(game);
+		if (index != -1)
+			tableData.get(index).setPlayerScore(game.getPlayerScore());
+		
+		console.setText(console.getText() + "\nView #" + game.getViewNum() + " >> Player Scored!");
+	}
+	
+	public void compScoreChanged(GameData game) {
+		int index = getViewIndexInTable(game);
+		if (index != -1)
+			tableData.get(index).setCompScore(game.getCompScore());
+		
+		console.setText(console.getText() + "\nView #" + game.getViewNum() + " >> Computer Scored!");
+	}
+	
+	public void levelChanged(GameData game) {
+		int index = getViewIndexInTable(game);
+		if (index != -1)
+			tableData.get(index).setLevel(game.getLevel());
+		
+		console.setText(console.getText() + "\nView #" + game.getViewNum() + " >> Level Up! (Level " + game.getLevel() + ")");
+	}
+	
+	public void gameStateChange(GameData game, GameState state) {
+		int index = getViewIndexInTable(game);
+		if (index != -1)
+			tableData.get(index).setGameState(game.getGameState());
+		
+		console.setText(console.getText() + "\nView #" + game.getViewNum() + " >> Game State changed to: " + game.getGameState());
+	}
+	
 }
 

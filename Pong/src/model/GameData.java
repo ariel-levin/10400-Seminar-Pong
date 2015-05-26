@@ -71,5 +71,12 @@ public class GameData implements PongEvents {
 	public void setGameState(GameState gameState) {
 		this.gameState = gameState;
 	}
+
+
+	@Override
+	public String toString() {
+		return "View #" + viewNum;
+	}
 	
 }
+

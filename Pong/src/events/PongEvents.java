@@ -11,7 +11,7 @@ package events;
 public interface PongEvents {
 
 	enum EventType {
-		PLAYER_GOAL, COMP_GOAL, LEVEL, GAME_STATUS, GAME_START
+		VIEW_OPEN, VIEW_CLOSE, PLAYER_GOAL, COMP_GOAL, LEVEL, GAME_STATUS
 	}
 	
 	enum GameState {
