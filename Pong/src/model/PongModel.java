@@ -1,10 +1,9 @@
 package model;
 
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
 import view.PongView;
 import controller.PongController;
 import events.PongEvents.EventType;
@@ -22,13 +21,14 @@ public class PongModel {
 
 	private PongModelUI 			modelUI;
 	private PongController 			controller;
-	private Map<Integer, GameData>	gameData;
+	private Map<Integer, GameData>	gameDataMap;
 	
 	
 	public PongModel() {
 		
-		gameData = new HashMap<Integer, GameData>();
-		modelUI = new PongModelUI(this);
+		gameDataMap = new HashMap<Integer, GameData>();
+		modelUI 	= new PongModelUI(this);
+		
 		try {
 			Stage gameViewStage = new Stage();
 			modelUI.start(gameViewStage);
@@ -41,30 +41,21 @@ public class PongModel {
 	public void setController(PongController controller) {
 		this.controller = controller;
 		if (controller != null) {
-			controller.addActionListener(new PlayEvent(), EventType.VIEW_PLAY);
-			controller.addActionListener(new PauseEvent(), EventType.VIEW_PAUSE);
-			controller.addActionListener(new StopEvent(), EventType.VIEW_STOP);
+			controller.addActionListener(new GameStateEvent(), EventType.VIEW_GAME_STATE);
 			controller.addActionListener(new ViewOpenEvent(), EventType.VIEW_OPEN);
 			controller.addActionListener(new ViewCloseEvent(), EventType.VIEW_CLOSE);
-			controller.addActionListener(new PlayerScoreEvent(), EventType.PLAYER_GOAL);
-			controller.addActionListener(new CompScoreEvent(), EventType.COMP_GOAL);
+			controller.addActionListener(new PlayerScoreEvent(), EventType.PLAYER_SCORE);
+			controller.addActionListener(new CompScoreEvent(), EventType.COMP_SCORE);
 		}
 	}
 
-	public Map<Integer, GameData> getGameData() {
-		return gameData;
-	}
-
-	public void modelUIplayPressed(GameData game) {
+	public void modelUIgameStateChange(GameData game) {
 		
-	}
-	
-	public void modelUIpausePressed(GameData game) {
+		controller.processEvent(EventType.MODEL_GAME_STATE, new ActionEvent(game,
+				game.getViewNum(), EventType.MODEL_GAME_STATE.toString()));
 		
-	}
-	
-	public void modelUIstopPressed(GameData game) {
-		
+		gameDataMap.get(game.getViewNum()).setGameState(game.getGameState());
+		modelUI.gameStateChange(game);
 	}
 	
 	
@@ -73,30 +64,15 @@ public class PongModel {
 	///////////////////////////////////////////////////////////////////////////
 
 	
-	class PlayEvent implements ActionListener {
+	class GameStateEvent implements ActionListener {
 
 		@Override
 		public void actionPerformed(java.awt.event.ActionEvent e) {
 			
-			// TODO Auto-generated method stub
-		}
-	}
-	
-	class PauseEvent implements ActionListener {
-
-		@Override
-		public void actionPerformed(java.awt.event.ActionEvent e) {
-			
-			// TODO Auto-generated method stub
-		}
-	}
-	
-	class StopEvent implements ActionListener {
-
-		@Override
-		public void actionPerformed(java.awt.event.ActionEvent e) {
-			
-			// TODO Auto-generated method stub
+			PongView view = (PongView)e.getSource();
+			GameData game = gameDataMap.get(view.getViewNum());
+			game.setGameState(view.getGameState());
+			modelUI.gameStateChange(game);
 		}
 	}
 	
@@ -112,7 +88,7 @@ public class PongModel {
 											view.getLevel(), 
 											view.getGameState()	);
 			
-			gameData.put(game.getViewNum(), game);
+			gameDataMap.put(game.getViewNum(), game);
 			modelUI.viewAdded(game);
 		}
 	}
@@ -123,9 +99,9 @@ public class PongModel {
 		public void actionPerformed(java.awt.event.ActionEvent e) {
 			
 			PongView view = (PongView)e.getSource();
-			GameData game = gameData.get(view.getViewNum());
+			GameData game = gameDataMap.get(view.getViewNum());
 			
-			gameData.remove(game.getViewNum());
+			gameDataMap.remove(game.getViewNum());
 			modelUI.viewClosed(game);
 		}
 	}
@@ -135,7 +111,10 @@ public class PongModel {
 		@Override
 		public void actionPerformed(java.awt.event.ActionEvent e) {
 			
-			// TODO Auto-generated method stub
+			PongView view = (PongView)e.getSource();
+			GameData game = gameDataMap.get(view.getViewNum());
+			game.setPlayerScore(view.getPlayerScore());
+			modelUI.playerScoreChanged(game);
 		}
 	}
 	
@@ -144,7 +123,10 @@ public class PongModel {
 		@Override
 		public void actionPerformed(java.awt.event.ActionEvent e) {
 			
-			// TODO Auto-generated method stub
+			PongView view = (PongView)e.getSource();
+			GameData game = gameDataMap.get(view.getViewNum());
+			game.setCompScore(view.getCompScore());
+			modelUI.compScoreChanged(game);
 		}
 	}
 	

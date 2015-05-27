@@ -4,6 +4,8 @@ import java.util.Comparator;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.SortedList;
@@ -261,7 +263,11 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				model.modelUIplayPressed(cbViews.getValue());
+				GameData game = cbViews.getValue();
+				if (game.getGameState() != GameState.PLAY) {
+					game.setGameState(GameState.PLAY);
+					model.modelUIgameStateChange(game);
+				}
 			}
 		});
 		
@@ -269,7 +275,11 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				model.modelUIpausePressed(cbViews.getValue());
+				GameData game = cbViews.getValue();
+				if (game.getGameState() != GameState.PAUSE) {
+					game.setGameState(GameState.PAUSE);
+					model.modelUIgameStateChange(game);
+				}
 			}
 		});
 		
@@ -277,7 +287,11 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				model.modelUIstopPressed(cbViews.getValue());
+				GameData game = cbViews.getValue();
+				if (game.getGameState() != GameState.STOP) {
+					game.setGameState(GameState.STOP);
+					model.modelUIgameStateChange(game);
+				}
 			}
 		});
 		
@@ -295,6 +309,11 @@ public class PongModelUI extends Application implements PongEvents {
 		console.setEditable(false);
 		console.setPrefSize(mainPane.getWidth(), 120);
 		console.prefWidthProperty().bind(mainPane.widthProperty());
+		console.textProperty().addListener(new ChangeListener<Object>() {
+			public void changed(ObservableValue<?> ov, Object oldValue, Object newValue) {
+				console.setScrollTop(Double.MIN_VALUE);
+			}
+		});
 		
 		bottomPanel.getChildren().add(console);
 		mainPane.setBottom(bottomPanel);
@@ -326,7 +345,7 @@ public class PongModelUI extends Application implements PongEvents {
 			}
 		}));
 		
-		console.setText(console.getText() + "\nView #" + game.getViewNum() + " was added");
+		console.appendText("\nView #" + game.getViewNum() + " >> was added");
 	}
 	
 	public void viewClosed(GameData game) {
@@ -338,39 +357,43 @@ public class PongModelUI extends Application implements PongEvents {
 		if (index != -1)
 			cbViews.getItems().remove(index);
 		
-		console.setText(console.getText() + "\nView #" + game.getViewNum() + " was closed");
+		console.appendText("\nView #" + game.getViewNum() + " >> was closed");
 	}
 	
 	public void playerScoreChanged(GameData game) {
 		int index = getViewIndexInTable(game);
 		if (index != -1)
-			tableData.get(index).setPlayerScore(game.getPlayerScore());
+			tableData.set(index, game);
 		
-		console.setText(console.getText() + "\nView #" + game.getViewNum() + " >> Player Scored!");
+		console.appendText("\nView #" + game.getViewNum()
+				+ " >> Player Scored! (Score = " + game.getPlayerScore() + ")");
 	}
 	
 	public void compScoreChanged(GameData game) {
 		int index = getViewIndexInTable(game);
 		if (index != -1)
-			tableData.get(index).setCompScore(game.getCompScore());
+			tableData.set(index, game);
 		
-		console.setText(console.getText() + "\nView #" + game.getViewNum() + " >> Computer Scored!");
+		console.appendText("\nView #" + game.getViewNum()
+				+ " >> Computer Scored! (Score = " + game.getCompScore() + ")");
 	}
 	
 	public void levelChanged(GameData game) {
 		int index = getViewIndexInTable(game);
 		if (index != -1)
-			tableData.get(index).setLevel(game.getLevel());
+			tableData.set(index, game);
 		
-		console.setText(console.getText() + "\nView #" + game.getViewNum() + " >> Level Up! (Level " + game.getLevel() + ")");
+		console.appendText("\nView #" + game.getViewNum()
+				+ " >> Level Up! (Level " + game.getLevel() + ")");
 	}
 	
-	public void gameStateChange(GameData game, GameState state) {
+	public void gameStateChange(GameData game) {
 		int index = getViewIndexInTable(game);
 		if (index != -1)
-			tableData.get(index).setGameState(game.getGameState());
+			tableData.set(index, game);
 		
-		console.setText(console.getText() + "\nView #" + game.getViewNum() + " >> Game State changed to: " + game.getGameState());
+		console.appendText("\nView #" + game.getViewNum()
+				+ " >> Game State changed to: " + game.getGameState());
 	}
 	
 }

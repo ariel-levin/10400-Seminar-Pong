@@ -92,9 +92,7 @@ public class PlayGroundPane extends Pane implements PongEvents {
 			public void handle(MouseEvent me) {
 				if (me.getButton() == MouseButton.PRIMARY) {
 					if (waitForAction) {
-						timeline.play();
-						gameON = true;
-						waitForAction = false;
+						play();
 						if (useCompHitPrediction)
 							xHitPrediction = getBallXhitPrediction();
 					}
@@ -206,11 +204,8 @@ public class PlayGroundPane extends Pane implements PongEvents {
 
 	private void playerKeyboardMovement(int dir) {
 		if (waitForAction) {
-			timeline.play();
-			gameON = true;
-			waitForAction = false;
-		}
-		if (gameON) {
+			play();
+		} else if (gameON) {
 			if (dir==1 && (playerCenterX() < getWidth()))
 				player.setX(player.getX() + player_keyboard_jumps);
 			if (dir==(-1) && (playerCenterX() - player_keyboard_jumps + 5 > 0))
@@ -275,20 +270,16 @@ public class PlayGroundPane extends Pane implements PongEvents {
 			if (ball.getCenterY() + BALL_RADIUS > 0) { // goal, but still haven't crossed the goal line
 				ballMoveY();
 				ballMoveX();
-			} else {
-				playerScore++;
-				isNewRound = true;
-				isPlayerScore = false;
-			}
+			} else 
+				playerScore();	// complete goal
+			
 		} else if (isCompScore) {
 			if (ball.getCenterY() < getHeight()) {	// goal, but still haven't crossed the goal line
 				ballMoveY();
 				ballMoveX();
-			} else {
-				compScore++;
-				isNewRound = true;
-				isCompScore = false;
-			}
+			} else
+				compScore();	// complete goal
+			
 		} else {
 
 			if (ball_x_right) {
@@ -377,7 +368,6 @@ public class PlayGroundPane extends Pane implements PongEvents {
 			break;
 		case 8:
 			useCompHitPrediction = true;
-			pongView.getPrimaryStage().setWidth(pongView.getPrimaryStage().widthProperty().doubleValue() * 1.37);
 			ball_jumps = BALL_DEFAULT_JUMPS + 1.5f;
 			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.1f;
 			comp_jumps = COMP_DEFAULT_JUMPS + 1.1f;
@@ -401,12 +391,32 @@ public class PlayGroundPane extends Pane implements PongEvents {
 		}
 	}
 
+	private void playerScore() {
+		playerScore++;
+		isNewRound = true;
+		isPlayerScore = false;
+		
+		pongView.playerScore();
+	}
+	
+	private void compScore() {
+		compScore++;
+		isNewRound = true;
+		isCompScore = false;
+		
+		pongView.compScore();
+	}
+	
 	public void play() {
 		if (gameON == false) {
 			timeline.play();
 			gameON = true;
 			waitForAction = false;
-			gameState = GameState.PLAY;
+			
+			if (gameState != GameState.PLAY) {
+				gameState = GameState.PLAY;
+				pongView.gameStateChanged();
+			}
 		}
 	}
 	
@@ -415,7 +425,11 @@ public class PlayGroundPane extends Pane implements PongEvents {
 			timeline.stop();
 			gameON = false;
 			waitForAction = false;
-			gameState = GameState.PAUSE;
+			
+			if (gameState != GameState.PAUSE) {
+				gameState = GameState.PAUSE;
+				pongView.gameStateChanged();
+			}
 		}
 	}
 	
@@ -436,24 +450,24 @@ public class PlayGroundPane extends Pane implements PongEvents {
 		
 		newRound();
 		
-		gameState = GameState.STOP;
+		if (gameState != GameState.STOP) {
+			gameState = GameState.STOP;
+			pongView.gameStateChanged();
+		}
 	}
 	
 	public void windowsSizeChanged() {
 		newRound();
 	}
 
-	
 	public int getCompScore() {
 		return compScore;
 	}
 
-	
 	public int getPlayerScore() {
 		return playerScore;
 	}
 
-	
 	public int getLevel() {
 		return level;
 	}

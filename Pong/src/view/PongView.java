@@ -3,6 +3,7 @@ package view;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import model.GameData;
 import controller.PongController;
 import events.PongEvents.EventType;
 import events.PongEvents.GameState;
@@ -37,7 +38,7 @@ import javafx.stage.WindowEvent;
  * */
 public class PongView extends Application {
 	
-	public final int WIDTH = 270;
+	public final int WIDTH 	= 270;
 	public final int HEIGHT = 420;
 
 	private int				viewNum;
@@ -48,8 +49,8 @@ public class PongView extends Application {
 	private BorderPane		mainPane;
 	private PlayGroundPane 	playGroundPane;
 	private PongController 	controller;
-	
-	/// make setController method, that addActionListeners
+
+
 	
 	public PongView(int viewNum) {
 		super();
@@ -105,7 +106,8 @@ public class PongView extends Application {
 			@Override
 			public void handle(WindowEvent arg0) {
 
-				controller.processEvent(EventType.VIEW_CLOSE, new ActionEvent(PongView.this, viewNum, EventType.VIEW_CLOSE.toString()));
+				controller.processEvent(EventType.VIEW_CLOSE,
+						new ActionEvent(PongView.this, viewNum, EventType.VIEW_CLOSE.toString()));
 			}
 		}));
 
@@ -237,12 +239,11 @@ public class PongView extends Application {
 	public void setController(PongController controller) {
 		this.controller = controller;
 		if (controller != null) {
-			controller.addActionListener(new PlayEvent(), EventType.MODEL_PLAY);
-			controller.addActionListener(new PauseEvent(), EventType.MODEL_PAUSE);
-			controller.addActionListener(new StopEvent(), EventType.MODEL_STOP);
+			controller.addActionListener(new GameStateEvent(), EventType.MODEL_GAME_STATE);
 			controller.addActionListener(new LevelEvent(), EventType.LEVEL);
 			
-			controller.processEvent(EventType.VIEW_OPEN, new ActionEvent(this, viewNum, EventType.VIEW_OPEN.toString()));
+			controller.processEvent(EventType.VIEW_OPEN, new ActionEvent(this,
+					viewNum, EventType.VIEW_OPEN.toString()));
 		}
 	}
 
@@ -285,38 +286,53 @@ public class PongView extends Application {
 		return playGroundPane.getGameState();
 	}
 	
+	public void playerScore() {
+		controller.processEvent(EventType.PLAYER_SCORE, new ActionEvent(this,
+				viewNum, EventType.PLAYER_SCORE.toString()));
+	}
+	
+	public void compScore() {
+		controller.processEvent(EventType.COMP_SCORE, new ActionEvent(this,
+				viewNum, EventType.COMP_SCORE.toString()));
+	}
+	
+	public void gameStateChanged() {
+		controller.processEvent(EventType.VIEW_GAME_STATE, new ActionEvent(this,
+				viewNum, EventType.VIEW_GAME_STATE.toString()));
+	}
+	
 	
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////
 	
 	
-	class PlayEvent implements ActionListener {
+	class GameStateEvent implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			
-			playGroundPane.play();
+			GameData game = (GameData)e.getSource();
+			
+			if (game.getViewNum() == viewNum) {
+				
+				switch (game.getGameState()) {
+				
+					case PLAY:
+						playGroundPane.play();
+						break;
+					case PAUSE:
+						playGroundPane.pause();
+						break;
+						
+					case STOP:
+						playGroundPane.stop();
+						break;
+				}
+			}
 		}
 	}
 	
-	class PauseEvent implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			
-			playGroundPane.pause();
-		}
-	}
-	
-	class StopEvent implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			
-			playGroundPane.stop();
-		}
-	}
 	
 	class LevelEvent implements ActionListener {
 
