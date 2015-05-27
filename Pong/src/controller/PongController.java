@@ -9,6 +9,7 @@ import events.PongEvents;
 import javafx.stage.Stage;
 import model.PongModel;
 import view.PongView;
+import view.PongViewJavaFX;
 
 
 /**
@@ -39,12 +40,16 @@ public class PongController implements PongEvents {
 
 	public void addView(PongView pongView) {
 		views.put(pongView.getViewNum(), pongView);
-		try {
-			Stage pongViewStage = new Stage();
-			views.get(pongView.getViewNum()).start(pongViewStage);
-		} catch (Exception e) {
-			e.printStackTrace();
+		
+		if (pongView instanceof PongViewJavaFX) {
+			try {
+				Stage pongViewStage = new Stage();
+				((PongViewJavaFX)pongView).start(pongViewStage);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
+		
 		pongView.setController(this);
 	}
 	

@@ -7,6 +7,7 @@ import java.util.Map;
 import view.PongView;
 import controller.PongController;
 import events.PongEvents.EventType;
+import events.PongEvents.GameState;
 import javafx.stage.Stage;
 
 
@@ -53,9 +54,36 @@ public class PongModel {
 		
 		controller.processEvent(EventType.MODEL_GAME_STATE, new ActionEvent(game,
 				game.getViewNum(), EventType.MODEL_GAME_STATE.toString()));
+	}
+	
+	private void checkScore(GameData game) {
 		
-		gameDataMap.get(game.getViewNum()).setGameState(game.getGameState());
-		modelUI.gameStateChange(game);
+		int tmpLevel = game.getLevel();
+		
+		switch (game.getPlayerScore()) {
+			case 2:
+				game.setLevel(2);
+				break;
+			case 4:
+				game.setLevel(3);
+				break;
+			case 8:
+				game.setLevel(4);
+				break;
+			case 16:
+				game.setLevel(5);
+				break;
+			case 32:
+				game.setLevel(6);
+				break;
+		}
+		
+		if (game.getLevel() != tmpLevel) {
+			controller.processEvent(EventType.LEVEL,new ActionEvent(game, 
+					game.getViewNum(), EventType.LEVEL.toString()));
+			
+			modelUI.levelChanged(game);
+		}
 	}
 	
 	
@@ -72,6 +100,11 @@ public class PongModel {
 			PongView view = (PongView)e.getSource();
 			GameData game = gameDataMap.get(view.getViewNum());
 			game.setGameState(view.getGameState());
+			if (game.getGameState() == GameState.STOP) {
+				game.setPlayerScore(view.getCompScore());
+				game.setCompScore(view.getCompScore());
+				game.setLevel(view.getLevel());
+			}
 			modelUI.gameStateChange(game);
 		}
 	}
@@ -115,6 +148,7 @@ public class PongModel {
 			GameData game = gameDataMap.get(view.getViewNum());
 			game.setPlayerScore(view.getPlayerScore());
 			modelUI.playerScoreChanged(game);
+			checkScore(game);
 		}
 	}
 	

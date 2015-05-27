@@ -72,7 +72,7 @@ public class GameData implements PongEvents {
 
 	@Override
 	public String toString() {
-		return "View #" + viewNum;
+		return "Game #" + viewNum;
 	}
 	
 }

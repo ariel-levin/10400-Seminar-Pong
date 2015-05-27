@@ -2,6 +2,7 @@ package model;
 
 import java.util.Comparator;
 
+import view.utils.PopupMessage;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
@@ -16,6 +17,9 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -25,6 +29,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Callback;
@@ -41,7 +47,7 @@ import events.PongEvents;
 public class PongModelUI extends Application implements PongEvents {
 
 	public final int WIDTH 	= 500;
-	public final int HEIGHT = 450;
+	public final int HEIGHT = 470;
 
 	private PongModel					model;
 	private Stage 						primaryStage;
@@ -49,7 +55,8 @@ public class PongModelUI extends Application implements PongEvents {
 	private BorderPane					mainPane;
 	private TableView<GameData>			table;
 	private ObservableList<GameData> 	tableData = FXCollections.observableArrayList();
-	private ComboBox<GameData> 			cbViews;
+	private ObservableList<GameData> 	cbItems = FXCollections.observableArrayList();
+	private ComboBox<GameData> 			cbGames;
 	private TextArea					console;
 	
 	
@@ -72,7 +79,7 @@ public class PongModelUI extends Application implements PongEvents {
 		mainPane = new BorderPane();
 		scene = new Scene(mainPane, WIDTH, HEIGHT);	
 		
-		mainPane.setPadding(new Insets(10,10,10,10));
+//		mainPane.setPadding(new Insets(10,10,10,10));
 
 		createTable();
 		createTopControlPanel();
@@ -243,17 +250,24 @@ public class PongModelUI extends Application implements PongEvents {
 		table.getColumns().addAll(viewNumCol, playerScoreCol, compScoreCol, levelCol, stateCol);
 		table.setItems(tableData);
 		table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-		mainPane.setCenter(table);
+		
+		BorderPane centerPane = new BorderPane();
+		centerPane.setPadding(new Insets(10,10,10,10));
+		centerPane.setCenter(table);
+		mainPane.setCenter(centerPane);
 	}
 	
 	private void createTopControlPanel() {
 		
-		HBox topPanel = new HBox();
-		topPanel.setAlignment(Pos.CENTER);
-		topPanel.setPadding(new Insets(10,20,20,20));
-		topPanel.spacingProperty().bind(mainPane.widthProperty().divide(8));
+		VBox topBox = new VBox(10);
+		topBox.setAlignment(Pos.CENTER);
 		
-		cbViews = new ComboBox<GameData>();
+		HBox topBtnBox = new HBox();
+		topBtnBox.setAlignment(Pos.CENTER);
+		topBtnBox.setPadding(new Insets(10,20,20,20));
+		topBtnBox.spacingProperty().bind(mainPane.widthProperty().divide(8));
+		
+		cbGames = new ComboBox<GameData>();
 		
 		Button btnPlay 	= new Button("Play");
 		Button btnPause = new Button("Pause");
@@ -263,11 +277,9 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				GameData game = cbViews.getValue();
-				if (game.getGameState() != GameState.PLAY) {
-					game.setGameState(GameState.PLAY);
-					model.modelUIgameStateChange(game);
-				}
+				GameData game = cbGames.getValue();
+				game.setGameState(GameState.PLAY);
+				model.modelUIgameStateChange(game);
 			}
 		});
 		
@@ -275,11 +287,9 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				GameData game = cbViews.getValue();
-				if (game.getGameState() != GameState.PAUSE) {
-					game.setGameState(GameState.PAUSE);
-					model.modelUIgameStateChange(game);
-				}
+				GameData game = cbGames.getValue();
+				game.setGameState(GameState.PAUSE);
+				model.modelUIgameStateChange(game);
 			}
 		});
 		
@@ -287,16 +297,15 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				GameData game = cbViews.getValue();
-				if (game.getGameState() != GameState.STOP) {
-					game.setGameState(GameState.STOP);
-					model.modelUIgameStateChange(game);
-				}
+				GameData game = cbGames.getValue();
+				game.setGameState(GameState.STOP);
+				model.modelUIgameStateChange(game);
 			}
 		});
 		
-		topPanel.getChildren().addAll(cbViews, btnPlay, btnPause, btnStop);
-		mainPane.setTop(topPanel);
+		topBtnBox.getChildren().addAll(cbGames, btnPlay, btnPause, btnStop);
+		topBox.getChildren().addAll(createMenu(), topBtnBox);
+		mainPane.setTop(topBox);
 	}
 	
 	private void createConsole() {
@@ -316,9 +325,52 @@ public class PongModelUI extends Application implements PongEvents {
 		});
 		
 		bottomPanel.getChildren().add(console);
+		bottomPanel.setPadding(new Insets(0,10,10,10));
 		mainPane.setBottom(bottomPanel);
 	}
 
+	private MenuBar createMenu() {
+		
+		final Menu fileMenu = new Menu("File");
+
+		MenuItem exitMenuItem = new MenuItem("Exit");
+		exitMenuItem.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
+
+			@Override
+			public void handle(javafx.event.ActionEvent arg0) {
+				Platform.exit();
+			}
+		});
+		fileMenu.getItems().add(exitMenuItem);
+
+		//////////////////////////////////////////////////////
+		
+		final Menu helpMenu = new Menu("Help");
+		
+		MenuItem aboutMenuItem = new MenuItem("About");
+		aboutMenuItem.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
+
+			@Override
+			public void handle(javafx.event.ActionEvent arg0) {
+				String msg = 	"Ariel Levin\n" +
+								"ariel.lvn89@gmail.com\n" +
+								"http://about.me/ariel.levin";
+				
+				final Popup popup = PopupMessage.createPopup(msg, primaryStage);
+
+				popup.show(primaryStage);
+			}
+		});
+		helpMenu.getItems().add(aboutMenuItem);
+		
+		//////////////////////////////////////////////////////
+		
+		MenuBar menuBar = new MenuBar();
+		menuBar.getMenus().addAll(fileMenu, helpMenu);
+		
+		return menuBar;
+	}
+		
 	private int getViewIndexInTable(GameData game) {
 		for (int i = 0; i < tableData.size(); i++ ) {
 			if (tableData.get(i).getViewNum() == game.getViewNum())
@@ -328,8 +380,8 @@ public class PongModelUI extends Application implements PongEvents {
 	}
 	
 	private int getViewIndexInComboBox(GameData game) {
-		for (int i = 0 ; i < cbViews.getItems().size(); i++ ) {
-			if (cbViews.getItems().get(i).getViewNum() == game.getViewNum())
+		for (int i = 0 ; i < cbGames.getItems().size(); i++ ) {
+			if (cbGames.getItems().get(i).getViewNum() == game.getViewNum())
 				return i;
 		}
 		return -1;
@@ -337,7 +389,8 @@ public class PongModelUI extends Application implements PongEvents {
 	
 	public void viewAdded(GameData game) {
 		tableData.add(game);
-		cbViews.setItems(new SortedList<GameData>(tableData, new Comparator<GameData>() {
+		cbItems.add(game);
+		cbGames.setItems(new SortedList<GameData>(cbItems, new Comparator<GameData>() {
 
 			@Override
 			public int compare(GameData o1, GameData o2) {
@@ -355,7 +408,7 @@ public class PongModelUI extends Application implements PongEvents {
 		
 		index = getViewIndexInComboBox(game);
 		if (index != -1)
-			cbViews.getItems().remove(index);
+			cbItems.remove(index);
 		
 		console.appendText("\nView #" + game.getViewNum() + " >> was closed");
 	}

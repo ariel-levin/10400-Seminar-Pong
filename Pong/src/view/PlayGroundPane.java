@@ -40,21 +40,21 @@ public class PlayGroundPane extends Pane implements PongEvents {
 	private final float COMP_DEFAULT_JUMPS = 0.6f;
 	private final float BALL_DEFAULT_JUMPS = 3.5f;
 	
-	private float 		ball_jumps = BALL_DEFAULT_JUMPS, player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
-	private float 		comp_jumps = COMP_DEFAULT_JUMPS;
-	private int 		compScore = 0, playerScore = 0, level = 1;
-	private double 		xHitPrediction;
-	private boolean 	ball_x_right = true, ball_y_down = false, isNewRound = true, useCompHitPrediction = false;
-	private boolean 	isPlayerScore = false, isCompScore = false, gameON = false, waitForAction = true;
-	private Timeline 	timeline;
-	private Label 		lblPlayer, lblComp, lblLevel;
-	private Rectangle 	player, comp;
-	private Circle 		ball;
-	private GameState	gameState = GameState.STOP;
-	private PongView 	pongView;
+	private float 			ball_jumps = BALL_DEFAULT_JUMPS, player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
+	private float 			comp_jumps = COMP_DEFAULT_JUMPS;
+	private int 			compScore = 0, playerScore = 0, level = 1;
+	private double 			xHitPrediction;
+	private boolean 		ball_x_right = true, ball_y_down = false, isNewRound = true, useCompHitPrediction = false;
+	private boolean 		isPlayerScore = false, isCompScore = false, gameON = false, waitForAction = true;
+	private Timeline 		timeline;
+	private Label 			lblPlayer, lblComp, lblLevel;
+	private Rectangle 		player, comp;
+	private Circle 			ball;
+	private GameState		gameState = GameState.STOP;
+	private PongViewJavaFX 	pongView;
 	
 
-	public PlayGroundPane(PongView pongView) {
+	public PlayGroundPane(PongViewJavaFX pongView) {
 		this.pongView = pongView;
 		
 		timeline = new Timeline(new KeyFrame(Duration.millis(DELAY), ae -> timeLineAction()));
@@ -184,7 +184,6 @@ public class PlayGroundPane extends Pane implements PongEvents {
 	
 	private void newRound() {
 		timeline.stop();
-		checkScore();
 		refreshScore();
 		ball.setCenterX(widthProperty().doubleValue()/2 - BALL_RADIUS/2);
 		ball.setCenterY(heightProperty().doubleValue() - PLAYER_HEIGHT - BALL_RADIUS);
@@ -351,46 +350,6 @@ public class PlayGroundPane extends Pane implements PongEvents {
 			ball.setCenterY(ball.getCenterY() - ball_jumps);
 	}
 	
-	private void checkScore() {
-		
-		switch (playerScore) {
-		case 2:
-			ball_jumps = BALL_DEFAULT_JUMPS + 0.5f;
-			ball.setFill(Color.rgb(78,210,48));
-			level = 2;
-			break;
-		case 4:
-			ball_jumps = BALL_DEFAULT_JUMPS + 1;
-			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 0.5f;
-			comp_jumps = COMP_DEFAULT_JUMPS + 0.5f;
-			ball.setFill(Color.rgb(18,184,225));
-			level = 3;
-			break;
-		case 8:
-			useCompHitPrediction = true;
-			ball_jumps = BALL_DEFAULT_JUMPS + 1.5f;
-			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.1f;
-			comp_jumps = COMP_DEFAULT_JUMPS + 1.1f;
-			ball.setFill(Color.rgb(240,29,228));
-			level = 4;
-			break;
-		case 16:
-			ball_jumps = BALL_DEFAULT_JUMPS + 2;
-			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.3f;
-			comp_jumps = COMP_DEFAULT_JUMPS + 1.3f;
-			ball.setFill(Color.rgb(245,0,58));
-			level = 5;
-			break;
-		case 32:
-			ball_jumps = BALL_DEFAULT_JUMPS + 3;
-			player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.5f;
-			comp_jumps = COMP_DEFAULT_JUMPS + 1.5f;
-			ball.setFill(Color.rgb(0,42,255));
-			level = 6;
-			break;
-		}
-	}
-
 	private void playerScore() {
 		playerScore++;
 		isNewRound = true;
@@ -425,32 +384,28 @@ public class PlayGroundPane extends Pane implements PongEvents {
 			timeline.stop();
 			gameON = false;
 			waitForAction = false;
-			
-			if (gameState != GameState.PAUSE) {
-				gameState = GameState.PAUSE;
-				pongView.gameStateChanged();
-			}
+			gameState = GameState.PAUSE;
+			pongView.gameStateChanged();
 		}
 	}
 	
 	public void stop() {
-		if (gameON)
-			timeline.stop();
-		
-		compScore = 0;
-		playerScore = 0;
-		
-		player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
-		comp_jumps = COMP_DEFAULT_JUMPS;
-		ball_jumps = BALL_DEFAULT_JUMPS;
-		ball.setFill(BALL_DEFAULT_COLOR);
-		
-		gameON = false;
-		waitForAction = false;
-		
-		newRound();
-		
 		if (gameState != GameState.STOP) {
+				
+			if (gameON)
+				timeline.stop();
+			
+			compScore = 0;
+			playerScore = 0;
+			level = 1;
+			
+			setLevel(1);
+			
+			gameON = false;
+			waitForAction = false;
+			
+			newRound();
+			
 			gameState = GameState.STOP;
 			pongView.gameStateChanged();
 		}
@@ -474,6 +429,57 @@ public class PlayGroundPane extends Pane implements PongEvents {
 
 	public GameState getGameState() {
 		return gameState;
+	}
+	
+	public void setLevel(int level) {
+		this.level = level;
+		
+		switch (level) {
+			case 1:
+				useCompHitPrediction = false;
+				ball_jumps = BALL_DEFAULT_JUMPS;
+				player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
+				comp_jumps = COMP_DEFAULT_JUMPS;
+				ball.setFill(BALL_DEFAULT_COLOR);
+				break;
+			case 2:
+				useCompHitPrediction = false;
+				ball_jumps = BALL_DEFAULT_JUMPS + 0.5f;
+				player_keyboard_jumps = PLAYER_DEFAULT_JUMPS;
+				comp_jumps = COMP_DEFAULT_JUMPS;
+				ball.setFill(Color.rgb(78,210,48));
+				break;
+			case 3:
+				useCompHitPrediction = false;
+				ball_jumps = BALL_DEFAULT_JUMPS + 1;
+				player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 0.5f;
+				comp_jumps = COMP_DEFAULT_JUMPS + 0.5f;
+				ball.setFill(Color.rgb(18,184,225));
+				break;
+			case 4:
+				useCompHitPrediction = true;
+				ball_jumps = BALL_DEFAULT_JUMPS + 1.5f;
+				player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.1f;
+				comp_jumps = COMP_DEFAULT_JUMPS + 1.1f;
+				ball.setFill(Color.rgb(240,29,228));
+				break;
+			case 5:
+				useCompHitPrediction = true;
+				ball_jumps = BALL_DEFAULT_JUMPS + 2;
+				player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.3f;
+				comp_jumps = COMP_DEFAULT_JUMPS + 1.3f;
+				ball.setFill(Color.rgb(245,0,58));
+				break;
+			case 6:
+				useCompHitPrediction = true;
+				ball_jumps = BALL_DEFAULT_JUMPS + 3;
+				player_keyboard_jumps = PLAYER_DEFAULT_JUMPS + 1.5f;
+				comp_jumps = COMP_DEFAULT_JUMPS + 1.5f;
+				ball.setFill(Color.rgb(0,42,255));
+				break;
+		}
+		
+		refreshScore();
 	}
 	
 }
