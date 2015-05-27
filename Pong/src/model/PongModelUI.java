@@ -78,8 +78,6 @@ public class PongModelUI extends Application implements PongEvents {
 		
 		mainPane = new BorderPane();
 		scene = new Scene(mainPane, WIDTH, HEIGHT);	
-		
-//		mainPane.setPadding(new Insets(10,10,10,10));
 
 		createTable();
 		createTopControlPanel();
@@ -252,19 +250,19 @@ public class PongModelUI extends Application implements PongEvents {
 		table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 		
 		BorderPane centerPane = new BorderPane();
-		centerPane.setPadding(new Insets(10,10,10,10));
+		centerPane.setPadding(new Insets(0,10,10,10));
 		centerPane.setCenter(table);
 		mainPane.setCenter(centerPane);
 	}
 	
 	private void createTopControlPanel() {
 		
-		VBox topBox = new VBox(10);
+		VBox topBox = new VBox();
 		topBox.setAlignment(Pos.CENTER);
 		
 		HBox topBtnBox = new HBox();
 		topBtnBox.setAlignment(Pos.CENTER);
-		topBtnBox.setPadding(new Insets(10,20,20,20));
+		topBtnBox.setPadding(new Insets(20,20,20,20));
 		topBtnBox.spacingProperty().bind(mainPane.widthProperty().divide(8));
 		
 		cbGames = new ComboBox<GameData>();
