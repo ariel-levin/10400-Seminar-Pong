@@ -79,7 +79,7 @@ public class PongViewJavaFX extends Application implements PongView {
 	
 	private void buildScene() {
 		
-		primaryStage.setTitle("Pong v2.0 <#" + viewNum + ">");
+		primaryStage.setTitle("Pong v2.0 <" + viewNum + ">");
 		
 		mainPane = new BorderPane();
 

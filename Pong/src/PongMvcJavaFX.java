@@ -163,4 +163,3 @@ public class PongMvcJavaFX extends Application {
 	}
 	
 }
-

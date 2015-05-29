@@ -275,9 +275,7 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				GameData game = cbGames.getValue();
-				game.setGameState(GameState.PLAY);
-				model.modelUIgameStateChange(game);
+				gameStateChange(GameState.PLAY);
 			}
 		});
 		
@@ -285,9 +283,7 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				GameData game = cbGames.getValue();
-				game.setGameState(GameState.PAUSE);
-				model.modelUIgameStateChange(game);
+				gameStateChange(GameState.PAUSE);
 			}
 		});
 		
@@ -295,9 +291,7 @@ public class PongModelUI extends Application implements PongEvents {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				GameData game = cbGames.getValue();
-				game.setGameState(GameState.STOP);
-				model.modelUIgameStateChange(game);
+				gameStateChange(GameState.STOP);
 			}
 		});
 		
@@ -368,7 +362,13 @@ public class PongModelUI extends Application implements PongEvents {
 		
 		return menuBar;
 	}
-		
+	
+	private void gameStateChange(GameState state) {
+		GameData game = cbGames.getValue();
+		game.setGameState(state);
+		model.modelUIgameStateChange(game);
+	}
+	
 	private int getViewIndexInTable(GameData game) {
 		for (int i = 0; i < tableData.size(); i++ ) {
 			if (tableData.get(i).getViewNum() == game.getViewNum())
