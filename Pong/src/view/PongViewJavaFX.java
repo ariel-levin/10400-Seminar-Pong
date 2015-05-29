@@ -61,6 +61,13 @@ public class PongViewJavaFX extends Application implements PongView {
 		viewListenersMap = new HashMap<EventType, ActionListener>();
 		viewListenersMap.put(EventType.MODEL_GAME_STATE, new GameStateEvent());
 		viewListenersMap.put(EventType.LEVEL, new LevelEvent());
+		
+		try {
+			Stage pongViewStage = new Stage();
+			start(pongViewStage);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override

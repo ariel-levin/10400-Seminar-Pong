@@ -23,14 +23,15 @@ import controller.PongController;
 
 
 /**
+ * Main Program
  * 
  * @author 	Ariel Levin
  * 			<br/><a href="http://about.me/ariel.levin">about.me/ariel.levin</a>
  * 			<br/><a href="mailto:ariel.lvn89@gmail.com">ariel.lvn89@gmail.com</a><br/><br/>
  *
  * */
-public class Program extends Application {
-
+public class PongMvcJavaFX extends Application {
+	
 	public final int WIDTH 	= 300;
 	public final int HEIGHT = 150;
 

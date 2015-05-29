@@ -6,10 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import events.PongEvents;
-import javafx.stage.Stage;
 import model.PongModel;
 import view.PongView;
-import view.PongViewJavaFX;
 
 
 /**
@@ -40,16 +38,6 @@ public class PongController implements PongEvents {
 
 	public void addView(PongView pongView) {
 		views.put(pongView.getViewNum(), pongView);
-		
-		if (pongView instanceof PongViewJavaFX) {
-			try {
-				Stage pongViewStage = new Stage();
-				((PongViewJavaFX)pongView).start(pongViewStage);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
-		
 		pongView.setController(this);
 	}
 	
