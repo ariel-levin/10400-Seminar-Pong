@@ -365,8 +365,10 @@ public class PongModelUI extends Application implements PongEvents {
 	
 	private void gameStateChange(GameState state) {
 		GameData game = cbGames.getValue();
-		game.setGameState(state);
-		model.modelUIgameStateChange(game);
+		if (game != null) {
+			game.setGameState(state);
+			model.modelUIgameStateChange(game);
+		}
 	}
 	
 	private int getViewIndexInTable(GameData game) {
